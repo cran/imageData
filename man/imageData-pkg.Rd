@@ -51,7 +51,8 @@ For an overview of the use of these functions and an example see below.
   \tab Calculates and plots correlation matrices for a\cr
   \tab set of responses.\cr
 \code{\link{imagetimesPlot}} 
-  \tab Plots the hour of the day carts are imaged\cr
+  \tab Plots the time within an interval versus the interval.\cr 
+  \tab For example, the hour of the day carts are imaged\cr
   \tab against the days after planting (or some other\cr
   \tab number of days after an event).\cr
 \code{\link{longiPlot}} 
@@ -72,6 +73,10 @@ For an overview of the use of these functions and an example see below.
 \code{\link{anom}} 
   \tab Tests if any values in a vector are anomalous\cr
   \tab in being outside specified limits.\cr
+\code{\link{calcTimes}} 
+  \tab Calculates for a set of times, the time intervals \cr
+  \tab after an origin time and the position of each with \cr
+  \tab in that time.\cr
 \code{\link{calcLagged}} 
   \tab Replaces the values in a vector with the result\cr
   \tab of applying an operation to it and a lagged value.\cr

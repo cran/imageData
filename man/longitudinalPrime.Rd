@@ -5,14 +5,16 @@
   Lemna Tec Scanalyzer. Add factors and explanatory variates that might be of use, including the maximum 
   of the heigh SV1 and SV2 andf the mean of the two SV measurements for several traits.}
 \usage{
-longitudinalPrime(data, smarthouse.lev = c("SW"), 
+longitudinalPrime(data, idcolumns = c("Genotype.ID","Treatment.1"), 
+                  smarthouse.lev = c("SW"), 
                   calcWaterLoss = TRUE, pixelsPERcm = 18)}
 \arguments{
- \item{data}{A \code{\link{data.frame}} containing the columns: 
+ \item{data}{A \code{\link{data.frame}} containing the columns specified in \code{idcolumns} 
+             along with  the following columns: 
           
             Snapshot.ID.Tag, Time.after.Planting..d., Smarthouse, Lane, Position, 
             
-            Genotype.ID,Treatment.1,Treatment.2,Snapshot.Time.Stamp, Weight.Before, 
+            Snapshot.Time.Stamp, Weight.Before, 
             
             Weight.After, Water.Amount, Projected.Shoot.Area..pixels., Area.SV1, 
             
@@ -31,6 +33,7 @@ longitudinalPrime(data, smarthouse.lev = c("SW"),
             Boundary.Points.To.Area.Ratio.TV,  Caliper.Length.TV, 
             
             Compactness.TV, Convex.Hull.Area.TV.}
+ \item{idcolumns}{A \code{\link{character}} vector giving the names of the columns that identify the plants in a cart e.g. Genotype.ID, Treatment.1, Treatment.2.}
  \item{smarthouse.lev}{A \code{\link{character}} vector giving the levels to use 
             for the Smarthouse factor.}
  \item{calcWaterLoss}{A \code{\link{logical}} indicating whether to calculate the Water.Loss. If it is \code{FALSE}, it is assumed that it is already in \code{data}.}
@@ -50,8 +53,7 @@ longitudinalPrime(data, smarthouse.lev = c("SW"),
          \item xPosn: numeric for the Positions within a Lane (calculated)
          \item Hour: hour of the day, to 2 decimal places, at which the image was taken (calculated)
          \item xDays: numeric for the DAP that is centred by subtracting the mean of the unique days (calculated)
-         \item Genotype.ID: factor for the genotype names
-         \item Treatment.1: factor for the treatments with levels being the names of the treatments
+         \item idcolumns: the columns listed in \code{idcolumns} that have beeen converted to factors
          \item Weight.Before: weight of the pot before watering
          \item Weight.After: weight of the pot after watering
          \item Water.Amount: the weight of the water added (= Water.After - Water.Before)  (calculated)

@@ -1,5 +1,31 @@
 \name{news}
 \title{News for Package imageData}
+\section{imageData Version 0.1-26 (2016-10-06)}{
+  \itemize{
+    \item{Rebuild under R 3.4.0.}
+  }}
+\section{imageData Version 0.1-25 (2016-08-23)}{
+  \itemize{
+    \item{For importExcel, changed argument \code{timeAfterPlanting} to \code{timeAfterStart}  and argument \code{plenting.time} to \code{startTime}.}
+    \item{For calcTimes, changed argument \code{originTime} to \code{startTime}.}
+  }}
+\section{imageData Version 0.1-24 (2016-08-19)}{
+  \itemize{
+    \item{Added a new function calcTimes to calculate intervals and time positions within intervals from imaging times. It allows a choice of unit for the interval.}
+    \item{Removed the calcuation of time values from imagtimesPlot and added arguments \code{intervals} and \code{timePositions} to allow the use to specify the names of the columns to be plotted.}
+  }}
+\section{imageData Version 0.1-23 (2016-08-17)}{
+  \itemize{
+    \item{Add \code{...} argument to importExcel to allow passing of arguments to imagetimesPlot.}
+    \item{Add \code{ggplotFuncs} argument to imagetimesPlot and dealt with a \code{factor} being supplied to its \code{intervals} argument.}
+  }}
+\section{imageData Version 0.1-22 (2016-07-01)}{
+  \itemize{
+    \item{Add arguments to importExcel that enables the user to supply names for cartId, imageTime and timeAfterPlanting.}
+    \item{Add idvars argument to longitudinalPrime to allow some flexibility in the naming and inclusion of genotype and treatment names.}
+    \item{Fix a bug in probeDF where supplying fact as "." caused a failure.}
+    \item{Allow no facets in longiPlot.}
+  }}
 \section{imageData Version 0.1-21 (2016-05-16)}{
   \itemize{
     \item{Further revised package documentation.}

@@ -64,13 +64,27 @@ globalVariables(c("Snapshot.ID.Tag", "Snapshot.Time.Stamp", "Time.after.Planting
   return(name)
 }
 
-"importExcel" <- function(file, sheet="raw data", prefix2suffix = TRUE, 
-                          planting.time = NULL, timeformat = "%Y-%m-%d %H:%M", 
-                          imagetimesPlot = TRUE)
-{ #Input the raw imaging data
+"importExcel" <- function(file, sheet="raw data", cartId = "Snapshot.ID.Tag", 
+                          imageTimes = "Snapshot.Time.Stamp", 
+                          timeAfterStart = "Time.after.Planting..d.", 
+                          prefix2suffix = TRUE, 
+                          startTime = NULL, timeFormat = "%Y-%m-%d %H:%M", 
+                          imagetimesPlot = TRUE, ...)
+{ 
+  #Check arguments
+  impArgs <- match.call()
+  if ("intervals" %in% names(impArgs))
+    stop(paste("importExcel assumes that intervals are specified by timeAfterStart; \n", 
+               "to have different intervals, call imagetimesPlot separately"))
+  if ("timeAfterPlanting"%in% names(impArgs))
+    stop("timeAfterPlanting has been deprecated; use timeAfterStart")
+  if ("planting.time"%in% names(impArgs))
+    stop("planting.time has been deprecated; use startTime")
+  
+  #Input the raw imaging data
   if (grepl("csv", file))
   { raw.dat <- read.csv(file, as.is=TRUE)
-    raw.dat$Snapshot.Time.Stamp <- as.POSIXct(raw.dat$Snapshot.Time.Stamp, format = timeformat)
+    raw.dat[imageTimes] <- as.POSIXct(raw.dat[[imageTimes]], format = timeFormat)
   }
   else if(grepl("xlsx", file))
     raw.dat <- readWorksheetFromFile(file, sheet=sheet)
@@ -87,53 +101,49 @@ globalVariables(c("Snapshot.ID.Tag", "Snapshot.Time.Stamp", "Time.after.Planting
   }
   
   #Change day calculation to take away a time origin and truncate to the nearest whole day
-  if (!is.null(planting.time))
-  { timeorigin <- as.POSIXct(planting.time, format = timeformat)
-    if (class(raw.dat["Snapshot.Time.Stamp"]) == "character")
-      raw.dat$Snapshot.Time.Stamp <- as.POSIXct(raw.dat$Snapshot.Time.Stamp, 
-                                                format = timeformat)
-    raw.dat <- within(raw.dat, 
-                      { Time.after.Planting..d. <- Snapshot.Time.Stamp - timeorigin
-                        Time.after.Planting..d. <- trunc(Time.after.Planting..d., units="days")
-                      })
-  }
-  
+  if (!is.null(startTime))
+    raw.dat <- calcTimes(raw.dat, imageTimes = imageTimes, timeFormat = timeFormat,
+                         intervals = timeAfterStart , startTime = startTime,
+                         intervalUnit = "days", timePositions = "Hour")
+
   #Plot the imaging times if required
   if (imagetimesPlot)
-    imagetimesPlot(raw.dat)
-  
+    imagetimesPlot(raw.dat, intervals=timeAfterStart, timePositions = "Hour", 
+                   ...)
+
   #Check unique for Snapshot.ID.Tag, Time.after.Planting..d.
-  combs <- as.vector(with(raw.dat, table(Snapshot.ID.Tag, Time.after.Planting..d.)))
+  combs <- as.vector(table(raw.dat[[cartId]], raw.dat[[timeAfterStart]]))
   if (any(combs != 1))
     warning(paste("There is not a single observation for",  
                   length(combs[combs != 1]), 
-                  "combination(s) of Snapshot.ID.Tag and Time.after.Planting..d."))
+                  "combination(s) of",cartId,"and", timeAfterStart))
   
-  #Sort data into Snapshot.ID.Tag, Time.after.Planting..d. order and store
+  #Sort data into cartId, Time.after.Planting..d. order and store
   # - may need to be reordered for analysis purposes
-  raw.dat <- with(raw.dat, raw.dat[order(Snapshot.ID.Tag, Time.after.Planting..d.), ])
+  raw.dat <- raw.dat[order(raw.dat[cartId], raw.dat[timeAfterStart]), ]
   return(raw.dat)
 }
 
 
 #Function to reduce imaging responses to those to be retained, forming longi.prime.dat
-"longitudinalPrime" <- function(data, smarthouse.lev = c("SW"), 
+"longitudinalPrime" <- function(data, idcolumns = c("Genotype.ID","Treatment.1"), 
+                                smarthouse.lev = c("SW"), 
                                 calcWaterLoss = TRUE, pixelsPERcm = 18)
 { #Extract variables from data to form data frame of longitudinal data
-  vars <- c("Snapshot.ID.Tag","Time.after.Planting..d.",
-            "Smarthouse","Lane","Position",
-            "Genotype.ID","Treatment.1","Treatment.2",
-            "Snapshot.Time.Stamp",
-            "Weight.Before","Weight.After","Water.Amount",
-            "Projected.Shoot.Area..pixels.",
-            "Area.SV1", "Boundary.Points.To.Area.Ratio.SV1", "Caliper.Length.SV1",
-            "Center.Of.Mass.Y.SV1", "Compactness.SV1", "Convex.Hull.Area.SV1", 
-            "Max.Dist.Above.Horizon.Line.SV1", 
-            "Area.SV2", "Boundary.Points.To.Area.Ratio.SV2", "Caliper.Length.SV2", 
-            "Center.Of.Mass.Y.SV2", "Compactness.SV2", "Convex.Hull.Area.SV2", 
-            "Max.Dist.Above.Horizon.Line.SV2", 
-            "Area.TV", "Boundary.Points.To.Area.Ratio.TV",  "Caliper.Length.TV", 
-            "Compactness.TV", "Convex.Hull.Area.TV")
+  posndatevars <- c("Snapshot.ID.Tag","Time.after.Planting..d.",
+                    "Smarthouse","Lane","Position",
+                    "Snapshot.Time.Stamp")
+  imagevars <- c("Weight.Before","Weight.After","Water.Amount",
+                 "Projected.Shoot.Area..pixels.",
+                 "Area.SV1", "Boundary.Points.To.Area.Ratio.SV1", "Caliper.Length.SV1",
+                 "Center.Of.Mass.Y.SV1", "Compactness.SV1", "Convex.Hull.Area.SV1", 
+                 "Max.Dist.Above.Horizon.Line.SV1", 
+                 "Area.SV2", "Boundary.Points.To.Area.Ratio.SV2", "Caliper.Length.SV2", 
+                 "Center.Of.Mass.Y.SV2", "Compactness.SV2", "Convex.Hull.Area.SV2", 
+                 "Max.Dist.Above.Horizon.Line.SV2", 
+                 "Area.TV", "Boundary.Points.To.Area.Ratio.TV",  "Caliper.Length.TV", 
+                 "Compactness.TV", "Convex.Hull.Area.TV")
+  vars <- c(posndatevars, idcolumns, imagevars)
   
   #Check that vars are in data
   if (any(is.na(match(vars, names(data)))))
@@ -155,31 +165,34 @@ globalVariables(c("Snapshot.ID.Tag", "Snapshot.Time.Stamp", "Time.after.Planting
                             })
 
   longi.prime.dat <- within(longi.prime.dat, {Position <- factor(Position, levels=sort(unique(Position)))}) 
-  longi.prime.dat[c('Lane','Days','Genotype.ID','Treatment.1')] <- 
-    as.data.frame(lapply(longi.prime.dat[c('Lane','Days','Genotype.ID','Treatment.1')], 
-                         FUN = factor))
+  facs <- c("Lane", idcolumns, "Days")
+  longi.prime.dat[facs] <- as.data.frame(lapply(longi.prime.dat[facs], FUN = factor))
   
 
 #Now derive a Reps factor 
 #+
-longi.prime.dat <- within(longi.prime.dat, 
-                          { Reps <- 1
+if (all(c("Genotype.ID","Treatment.1") %in% posndatevars))
+{
+  longi.prime.dat <- within(longi.prime.dat, 
+                            { Reps <- 1
                             trts <- fac.combine(list(Genotype.ID,Treatment.1))
-                          })
-for (t in levels(longi.prime.dat$trts))
-{ which.indiv <- with(longi.prime.dat, 
-                      sort(unique(longi.prime.dat[trts==t, "Snapshot.ID.Tag"])))
+                            })
+  for (t in levels(longi.prime.dat$trts))
+  { which.indiv <- with(longi.prime.dat, 
+                        sort(unique(longi.prime.dat[trts==t, "Snapshot.ID.Tag"])))
   for (k in 1:length(which.indiv))
     longi.prime.dat[longi.prime.dat$trts == t & 
                       longi.prime.dat$Snapshot.ID.Tag == which.indiv[k], "Reps"] <- k
-}
-longi.prime.dat$Reps <- factor(longi.prime.dat$Reps)
+  }
+  longi.prime.dat$Reps <- factor(longi.prime.dat$Reps)
+} else 
+  longi.prime.dat$Reps <- NA
 
 #Form responses that can be calculated by row-wise  operations: 
-#transformation of a response or combining responses
+longi.prime.dat <- calcTimes(longi.prime.dat, imageTimes = "Snapshot.Time.Stamp",
+                              timePositions = "Hour")
 longi.prime.dat <- within(longi.prime.dat, 
-                          { Hour <- as.POSIXlt(Snapshot.Time.Stamp)
-                            Hour <- Hour$hour + Hour$min/60 + Hour$sec/3600
+                          { 
                             Area.SV <- (Area.SV1 + Area.SV2)/1000/2
                             Area.TV <- Area.TV/1000
                             Image.Biomass <- Area.SV* sqrt(Area.TV)
@@ -195,26 +208,26 @@ longi.prime.dat <- within(longi.prime.dat,
                             Volume <- Convex.Hull.TV*Max.Height
                           })
 
-out.vars <- c("Smarthouse","Lane","Position","Days",
-              "Snapshot.ID.Tag", "xPosn", "Reps",
-              "Snapshot.Time.Stamp", "Hour", "xDays",
-              "Genotype.ID", "Treatment.1",
-              "Weight.Before","Weight.After","Water.Amount", "Water.Loss", 
-              "Area", "Area.SV", "Area.TV", 
-              "Area.SV1", "Area.SV2", "Image.Biomass", 
-              "Max.Height", "Max.Dist.Above.Horizon.Line.SV1", 
-              "Max.Dist.Above.Horizon.Line.SV2", 
-              "Density", "Volume", "Centre.Mass", 
-              "Center.Of.Mass.Y.SV1", "Center.Of.Mass.Y.SV2", 
-              "Convex.Hull.SV", "Convex.Hull.TV", "Convex.Hull.Area.TV", 
-              "Convex.Hull.Area.SV1", "Convex.Hull.Area.SV2", 
-              "Boundary.Points.To.Area.Ratio.SV1", 
-              "Boundary.Points.To.Area.Ratio.SV2", 
-              "Boundary.Points.To.Area.Ratio.TV",  
-              "Compactness.SV1", "Compactness.SV2", 
-              "Compactness.SV", "Compactness.TV", 
-              "Caliper.Length.SV1", "Caliper.Length.SV2", 
-              "Caliper.Length.TV")
+out.posndatevars <- c("Smarthouse","Lane","Position","Days",
+                      "Snapshot.ID.Tag", "xPosn", "Reps",
+                      "Snapshot.Time.Stamp", "Hour", "xDays")
+out.imagevars <- c("Weight.Before","Weight.After","Water.Amount", "Water.Loss", 
+                   "Area", "Area.SV", "Area.TV", 
+                   "Area.SV1", "Area.SV2", "Image.Biomass", 
+                   "Max.Height", "Max.Dist.Above.Horizon.Line.SV1", 
+                   "Max.Dist.Above.Horizon.Line.SV2", 
+                   "Density", "Volume", "Centre.Mass", 
+                   "Center.Of.Mass.Y.SV1", "Center.Of.Mass.Y.SV2", 
+                   "Convex.Hull.SV", "Convex.Hull.TV", "Convex.Hull.Area.TV",
+                   "Convex.Hull.Area.SV1", "Convex.Hull.Area.SV2", 
+                   "Boundary.Points.To.Area.Ratio.SV1", 
+                   "Boundary.Points.To.Area.Ratio.SV2", 
+                   "Boundary.Points.To.Area.Ratio.TV",  
+                   "Compactness.SV1", "Compactness.SV2", 
+                   "Compactness.SV", "Compactness.TV", 
+                   "Caliper.Length.SV1", "Caliper.Length.SV2", 
+                   "Caliper.Length.TV")
+out.vars <- c(out.posndatevars, idcolumns, out.imagevars)
 
 #'## Calculate Water Use
 #+
@@ -504,11 +517,11 @@ return(longi.prime.dat)
                                          function(x, fac)
                                          { x[fac]}, 
                                          fac))
-    if (is.factor(data[[INDICES[fac]]]))
-      tmp[[INDICES[fac]]] <- factor(tmp[[INDICES[fac]]])
-    else
-      if (is.numeric(data[[INDICES[fac]]]))
-        tmp[[INDICES[fac]]] <- as.numeric(tmp[[INDICES[fac]]])
+  if (is.factor(data[[INDICES[fac]]]))
+    tmp[[INDICES[fac]]] <- factor(tmp[[INDICES[fac]]])
+  else
+    if (is.numeric(data[[INDICES[fac]]]))
+      tmp[[INDICES[fac]]] <- as.numeric(tmp[[INDICES[fac]]])
   }
   tmp <- tmp[, c((ncols+1):length(tmp),1:ncols)]
   tmp <- na.omit(tmp)
@@ -609,19 +622,25 @@ return(longi.prime.dat)
                         facet.x = "Treatment.1", facet.y =   "Smarthouse", labeller = NULL,  
                         colour = "black", colour.column=NULL, colour.values=NULL, alpha = 0.1, 
                         ggplotFuncs = NULL, printPlot = TRUE)
-{ facet.string <- paste(facet.y,facet.x,sep="~")
+{ 
   data <- data[!is.na(data[response]),]
   longi.plot <- ggplot(data=data, aes_string(x = x, y = response)) +
                 theme_bw() +
                 theme(panel.grid.major = element_line(colour = "grey60", size = 0.5), 
                       panel.grid.minor = element_line(colour = "grey80", size = 0.5)) +
                 xlab(x.title) + ylab(y.title) + ggtitle(title)
-  if (is.null(labeller))
-    longi.plot <- longi.plot + facet_grid(facet.string)
-  else
-    longi.plot <- longi.plot + facet_grid(facet.string, labeller = labeller)
-  longi.plot <- longi.plot + theme(strip.text = element_text(size=12, face="bold"),
-                                   axis.title = element_text(face="bold"), legend.position="none")
+  
+  #Do facet if have any
+  if (facet.x != "." | facet.y != ".")
+  {
+    facet.string <- paste(facet.y,facet.x,sep="~")
+    if (is.null(labeller))
+      longi.plot <- longi.plot + facet_grid(facet.string)
+    else
+      longi.plot <- longi.plot + facet_grid(facet.string, labeller = labeller)
+    longi.plot <- longi.plot + theme(strip.text = element_text(size=12, face="bold"),
+                                     axis.title = element_text(face="bold"), legend.position="none")
+  }
   if (is.null(colour.column))
     longi.plot <- longi.plot + geom_line(aes_string(group=individuals),  
                                          colour=colour, alpha=alpha)
@@ -640,27 +659,84 @@ return(longi.prime.dat)
   invisible(longi.plot)
 }
 
+
+#Function that calculates intervals and imageTimes from imageTimes
+"calcTimes" <- function(data, imageTimes = NULL, 
+                        timeFormat = "%Y-%m-%d %H:%M",
+                        intervals = "Time.after.Planting..d.", startTime = NULL, 
+                        intervalUnit = "days", timePositions = NULL)
+{
+  if (!is.null(imageTimes))
+  {
+    if (!(imageTimes %in% names(data)))
+      stop("A column for imageTimes is not present in data")
+    if (any(class(data[[imageTimes]])[1] %in% c("character", "factor")))
+      data[imageTimes] <- as.POSIXct(data[[imageTimes]], format = timeFormat)
+    units <- c("secs", "mins", "hours", "days")
+    unit <- units[check.arg.values(intervalUnit, options=units)]
+    if (unit == "secs")
+    {
+      d <- getOption("digits.secs")
+      if (d == 0)
+        warning(paste("Fractions of sections will not be stored or extracted unless: \n",
+                      "(i) option(digits.secs) has been set to the number of decimal places required \n",
+                      "and (ii) %OS is used for seconds in timeFormat",
+                      sep=""))
+    }
+    if (!is.null(startTime))
+    { 
+      startTime <- as.POSIXct(startTime, format = timeFormat)
+      data[[intervals]] <- difftime(data[[imageTimes]], startTime, units=intervalUnit)
+      data[[intervals]] <- as.numeric(trunc(data[[intervals]], units=intervalUnit))
+    }
+    if (!is.null(timePositions))
+    {
+      data[[timePositions]] <- trunc(data[[imageTimes]], units=unit)
+      if (unit == "secs")
+      {
+        data[[timePositions]] <- as.numeric(format(data[[imageTimes]], "%OS"))
+        data[[timePositions]] <- data[[timePositions]] - floor(data[[timePositions]])
+      }
+      else
+        data[[timePositions]] <- as.numeric(difftime(data[[imageTimes]], 
+                                                     data[[timePositions]], 
+                                                     units=units[(match(unit, units) - 1)]))
+    }
+  }
+  return(data)
+}
+
+
 #Function that produces a plot of the imaging times
-"imagetimesPlot" <- function(data, times="Time.after.Planting..d.")
-{ data[times] <- as.numeric(data[[times]])
-  tmp <- split(data, data[times])
-  tmp <- lapply(tmp, function(x) {
-    today <- strftime(x$Snapshot.Time.Stamp[1], "%Y-%m-%d")
-    midday <- strptime(paste(today,"12:00:00"), "%Y-%m-%d %H:%M:%S")
-    within(x,
-           time <- 12 +
-             ((as.numeric(Snapshot.Time.Stamp) - as.numeric(midday)) / 60^2))
-  })
-  tmp <- do.call(rbind, tmp) 
-  start <- min(data[times], na.rm=TRUE)
-  end <- max(data[times], na.rm=TRUE)
-  time.plot <- ggplot(tmp, aes_string(times, "time")) +
-    geom_line(aes(group=Snapshot.ID.Tag, colour=Lane), alpha=0.05) + 
+"imagetimesPlot" <- function(data, intervals = "Time.after.Planting..d.", 
+                             timePositions = "Hour", 
+                             groupVariable = "Snapshot.ID.Tag", colourVariable = "Lane", 
+                             ggplotFuncs = NULL)
+{ 
+  #Check whether have enough information to do the calculations
+  if (!all(c(intervals, timePositions, groupVariable, colourVariable) %in% names(data)))
+    stop(paste("At least one of the columns for intervals, timePositions", 
+               "groupVariable or colourVariable is not present in data", sep=""))
+  if (!(is.numeric(data[[intervals]])))
+    data[intervals] <- dae::as.numfac(data[[intervals]])
+  if (!(is.numeric(data[[colourVariable]])))
+    data[colourVariable] <- dae::as.numfac(data[[colourVariable]])
+  
+  #Do plot
+  start <- min(data[intervals], na.rm=TRUE)
+  end <- max(data[intervals], na.rm=TRUE)
+  time.plot <- ggplot(data, aes_string(x=intervals, y=timePositions)) +
+    geom_line(aes_string(group=groupVariable, colour=colourVariable), alpha=0.05) + 
     scale_colour_gradient(low="grey60", high="grey20") + 
-    geom_point(aes(group=Snapshot.ID.Tag), size=0.5) +
+    geom_point(aes_string(group=groupVariable), size=0.5) +
     facet_grid(Smarthouse ~ .) + theme_bw() +
     scale_x_continuous(breaks=seq(start, end, by=2)) +
     ylab("Hour of day")
+  
+  if (!is.null(ggplotFuncs))
+    for (f in ggplotFuncs)
+      time.plot <- time.plot + f
+  
   print(time.plot)
   invisible(time.plot)
 }
@@ -674,7 +750,8 @@ return(longi.prime.dat)
                        columns.retained=c("Snapshot.ID.Tag", "Smarthouse", "Lane", "Position", 
                                           "Treatment.1", "Genotype.ID"),
                        whichPrint=c("anomalous","innerPlot","outerPlot"), na.rm=TRUE, ...)
-{ if (!all(individuals %in% columns.retained))
+{ 
+  if (!all(individuals %in% columns.retained))
     stop("The individuals column(s) is (are) not in the columns.retained")
   if (is.null(lower) & is.null(upper))
     stop("Must set at least one of lower and upper")
@@ -683,7 +760,8 @@ return(longi.prime.dat)
   
   #Determine anomalous individuals
   if (is.null(groupsFactor))
-  { anomalous.individuals <- intervalValueCalculate(response=response, FUN = "anom", data=data,
+  { 
+    anomalous.individuals <- intervalValueCalculate(response=response, FUN = "anom", data=data,
                                                     individuals=individuals, 
                                                     lower=lower, upper=upper, 
                                                     start.time=start.time, end.time=end.time, 
@@ -693,27 +771,31 @@ return(longi.prime.dat)
     data <- merge(data, anomalous.individuals[,1:2], by=individuals, sort=FALSE)
   }
   else
-  { tmp <- split(data, data[[groupsFactor]])
+  { 
+    tmp <- split(data, data[[groupsFactor]])
     ngrps <- length(tmp)
     nstart <- length(start.time)
     nend <- length(end.time)
     nlow <- length(lower)
     nup <- length(upper)
     if (nstart == 0)
-    { kstart <- NULL
+    { 
+      kstart <- NULL
       if (nend != 1 & nend != ngrps)
         stop("Number of end.time values must be equal 1 or the number of levels in groupsFactor")
       kend <- end.time[1]
     } else
       if (nend ==0)
-      { kend <- NULL
+      { 
+        kend <- NULL
         if (nstart != 1 & nstart != ngrps)
           stop("Number of start.time values must be equal 1 or the number of levels in groupsFactor")
         kstart <- start.time[1]
       } else
-      {     if (nstart != nend | (nstart != ngrps & nstart != 1))
-        stop("Number of start.time and end.time values must be equal and equal to 1 \n",
-             "or the number of levels in groupsFactor")
+      {     
+        if (nstart != nend | (nstart != ngrps & nstart != 1))
+          stop("Number of start.time and end.time values must be equal and equal to 1 \n",
+               "or the number of levels in groupsFactor")
         kstart <- start.time[1]
         kend <- end.time[1]
       }
@@ -724,8 +806,9 @@ return(longi.prime.dat)
     klow <- lower[1]
     kup <- upper[1]
     for (k in 1:ngrps)
-    { if (nstart > 1)
-      kstart <- start.time[k]
+    { 
+      if (nstart > 1)
+        kstart <- start.time[k]
       if (nend > 1)
         kend <- end.time[k]
       if (nlow > 1)
@@ -747,7 +830,8 @@ return(longi.prime.dat)
   
   #Plot without anomalous individuals
   if (sum(!data[[response.anom]] > 0))
-  { innerPlot <- longiPlot(data = subset(data, !data[[response.anom]]), 
+  { 
+    innerPlot <- longiPlot(data = subset(data, !data[[response.anom]]), 
                            x=x, response = response, 
                            printPlot=FALSE, ...)
     innerPlot <- innerPlot + scale_x_continuous(breaks=breaks)
@@ -760,7 +844,8 @@ return(longi.prime.dat)
   
   #Print out anomalous individuals
   if ("anomalous" %in% opt)
-  { anom.dat <- data[c(columns.retained, response.anom)] 
+  { 
+    anom.dat <- data[c(columns.retained, response.anom)] 
     anom.dat <- split(anom.dat, anom.dat[[individuals]])
     anom.dat <- lapply(anom.dat, 
                        function(dat)
@@ -773,14 +858,15 @@ return(longi.prime.dat)
   
   #Plot anomalous individuals, adding Snapshot.ID.Tag
   if (sum(data[[response.anom]] > 0))
-  { outerPlot <- longiPlot(data = subset(data, data[[response.anom]]), 
+  { 
+    outerPlot <- longiPlot(data = subset(data, data[[response.anom]]), 
                            x=x, response = response, alpha=0.5, colour="purple", 
                            printPlot=FALSE, ...)
     outerPlot <- outerPlot + scale_x_continuous(breaks=breaks)
-      
+    
     if (!is.null(vertical.line))
       outerPlot <- outerPlot + geom_vline(xintercept=vertical.line, linetype="longdash", size=1)
-      
+    
     if ("outerPlot" %in% opt)
       print(outerPlot)
   } else
@@ -794,7 +880,8 @@ return(longi.prime.dat)
                       times.factor = "Days", x = NULL, 
                       facet.x = "Treatment.1", facet.y = "Smarthouse", 
                       which.plots = c("smoothed", "AGR", "RGR"), ggplotFuncs = NULL, ...)
-{ options <- c("differences","derivative")
+{ 
+  options <- c("differences","derivative")
   opt <- options[check.arg.values(rates.method, options=options)]
   options <- c("none", "responseComparison", "unsmoothed", "smoothed", "AGR", "RGR", "all")
   plots <- options[unlist(lapply(which.plots, check.arg.values, options=options))]
@@ -802,13 +889,17 @@ return(longi.prime.dat)
     plots <- c("unsmoothed", "smoothed", "AGR", "RGR")
   if (any(c("AGR","RGR") %in% plots) & !get.rates)
     stop("get.rates is FALSE but growth-rate plots have been requested")
-
+  
   #Form data.frame with just columns needed 
-  v <- c(individuals, times.factor, facet.x, facet.y, xname, response)
+  v <- c(individuals, times.factor, xname, response)
+  if (facet.x != ".")
+    v <- c(v, facet.x)
+  if (facet.y != ".")
+    v <- c(v, facet.y)
   if (is.null(x))
     x <- xname
-#  else
-#    v <- c(v,x)
+  #  else
+  #    v <- c(v,x)
   if (!all(v %in% names(data)))
     stop(paste("Do not have the following required columns in data: ", 
                paste(v[!(v %in% names(data))],sep=", "), "\n", sep=""))
@@ -818,17 +909,22 @@ return(longi.prime.dat)
   response.smooth <- paste(response, "smooth", sep=".")
   responses <- response.smooth 
   for (degfree in df)
-  { if (opt == "differences")
-    { tmp <- splitSplines(tmp, response, x=xname, INDICES = individuals, df = degfree, 
+  { 
+    if (opt == "differences")
+    { 
+      tmp <- splitSplines(tmp, response, x=xname, INDICES = individuals, df = degfree, 
                           na.rm = na.rm)
       if (get.rates)
-      { responses <- c(responses, paste(response.smooth, c("AGR","RGR"), sep="."))
+      { 
+        responses <- c(responses, paste(response.smooth, c("AGR","RGR"), sep="."))
         tmp <- splitContGRdiff(tmp, response.smooth, INDICES=individuals,
                                which.rates = c("AGR","RGR"), times.factor=times.factor)
       } 
     } else #derivatives
-    { if (get.rates)
-      { responses <- c(responses, paste(response.smooth, c("AGR","RGR"), sep="."))
+    { 
+      if (get.rates)
+      { 
+        responses <- c(responses, paste(response.smooth, c("AGR","RGR"), sep="."))
         tmp <- splitSplines(tmp, response, x=xname, INDICES = individuals, deriv=1, 
                             suffices.deriv="AGR", RGR="RGR", df = degfree, na.rm = na.rm)
       }
@@ -842,68 +938,76 @@ return(longi.prime.dat)
   
   #Plot some combination of unsmoothed and smoothed response, AGR and RGR
   if (!("none" %in% plots))
-  { responses.tmp <- names(tmp)
+  { 
+    responses.tmp <- names(tmp)
     if (any(c("responseComparison", "unsmoothed") %in% plots))
-    { pltu <- longiPlot(data = tmp, x=x, response = response, 
+    { 
+      pltu <- longiPlot(data = tmp, x=x, response = response, 
                         facet.x=facet.x, facet.y=facet.y, 
                         title="Unsmoothed data", y.title = response, 
                         printPlot=FALSE, ...)
       if (!is.null(ggplotFuncs))
         for (f in ggplotFuncs)
           pltu <- pltu + f
-      if (!("responseComparison" %in% plots))
-        print(pltu)
+        if (!("responseComparison" %in% plots))
+          print(pltu)
     }
     if ("responseComparison" %in% plots)
       for (r in paste(response.smooth, df, sep="."))
-      { plt <- longiPlot(data = tmp, x=x, response = r, 
-                       facet.x=facet.x, facet.y=facet.y, 
-                       title="Smoothed response", y.title = r, 
-                       printPlot=FALSE, ...)
+      { 
+        plt <- longiPlot(data = tmp, x=x, response = r, 
+                         facet.x=facet.x, facet.y=facet.y, 
+                         title="Smoothed response", y.title = r, 
+                         printPlot=FALSE, ...)
         if (!is.null(ggplotFuncs))
           for (f in ggplotFuncs)
             plt <- plt + f
-        grid.newpage()
-        pushViewport(viewport(layout = grid.layout(1, 2)))
-        print(pltu, vp=viewport(layout.pos.row=1, layout.pos.col=1))
-        print(plt, vp=viewport(layout.pos.row=1, layout.pos.col=2))
+          grid.newpage()
+          pushViewport(viewport(layout = grid.layout(1, 2)))
+          print(pltu, vp=viewport(layout.pos.row=1, layout.pos.col=1))
+          print(plt, vp=viewport(layout.pos.row=1, layout.pos.col=2))
       }
     else
       if ("smoothed" %in% plots)
         for (r in paste(response.smooth, df, sep="."))
-        { plt <- longiPlot(data = tmp, x=x, response = r, 
-                            facet.x=facet.x, facet.y=facet.y, 
-                            title="Smoothed response", y.title = r, 
+        { 
+          plt <- longiPlot(data = tmp, x=x, response = r, 
+                           facet.x=facet.x, facet.y=facet.y, 
+                           title="Smoothed response", y.title = r, 
                            printPlot=FALSE, ...)
           if (!is.null(ggplotFuncs))
             for (f in ggplotFuncs)
               plt <- plt + f
-          print(plt)
+            print(plt)
         }
     if ("AGR" %in% plots)
-    { responses.plt <- responses.tmp[grep("AGR", responses.tmp,fixed=T)]
+    { 
+      responses.plt <- responses.tmp[grep("AGR", responses.tmp,fixed=T)]
       for (r in responses.plt)
-      { plt <- longiPlot(data = tmp, x=x, response = r, 
+      { 
+        plt <- longiPlot(data = tmp, x=x, response = r, 
                          facet.x=facet.x, facet.y=facet.y, 
                          title=paste("Growth rates by ", opt, sep=""), 
                          y.title = r, printPlot=FALSE, ...)
         if (!is.null(ggplotFuncs))
           for (f in ggplotFuncs)
             plt <- plt + f
-        print(plt)
+          print(plt)
       }
     }
     if ("RGR" %in% plots)
-    { responses.plt <- responses.tmp[grep("RGR", responses.tmp,fixed=T)]
+    { 
+      responses.plt <- responses.tmp[grep("RGR", responses.tmp,fixed=T)]
       for (r in responses.plt)
-      { plt <- longiPlot(data = tmp, x=x, response = r, 
+      {
+        plt <- longiPlot(data = tmp, x=x, response = r, 
                          facet.x=facet.x, facet.y=facet.y, 
                          title=paste("Growth rates by ", opt, sep=""), 
                          y.title = r, printPlot=FALSE, ...)
         if (!is.null(ggplotFuncs))
           for (f in ggplotFuncs)
             plt <- plt + f
-        print(plt)
+          print(plt)
       }
     }
   }
