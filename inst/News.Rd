@@ -1,18 +1,76 @@
 \name{news}
 \title{News for Package imageData}
+\section{imageData Version 0.1-41 (2017-12-03)}{
+  \itemize{
+    \item{Rebuild under R-3.5.0.}
+  }}
+\section{imageData Version 0.1-40 (2017-08-31)}{
+  \itemize{
+    \item{Modify splitContGRdiff to ensure that initial columns are INDICEs followed by times.factor.}
+  }}
+\section{imageData Version 0.1-39 (2017-07-31)}{
+  \itemize{
+    \item{Change default for \code{smarthouse.lev} in longitudinalPrime to \code{NULL}, in which case unique values in the Smarthouse column will be used.}
+  }}
+\section{imageData Version 0.1-37 (2017-05-22)}{
+  \itemize{
+    \item{Recompiled the package because of problems loading it.}
+  }}
+\section{imageData Version 0.1-36 (2017-04-22)}{
+  \itemize{
+    \item{Added argument \code{correctBoundaries} to probeDF to match fitSpline and splitSplines.}
+  }}
+\section{imageData Version 0.1-35 (2017-04-20)}{
+  \itemize{
+    \item{Added argument \code{sep} to importExcel to allow for separators other than `,' in a \code{csv} file.}
+  }}
+\section{imageData Version 0.1-34 (2017-04-19)}{
+  \itemize{
+    \item{Added argument \code{correctBoundaries} to fitSpline and splitSplines to implement the Huang (2001) method for correcting bias in the boundary estimates of a fitted spline.}
+  }}
+\section{imageData Version 0.1-33 (2017-03-20)}{
+  \itemize{
+    \item{Fixed bug in splitContGRdiff when there are multiple missing values for some \code{INDICES} or for the \code{time.factor}. This causes an identifiability problem for the merge function.}
+  }}
+\section{imageData Version 0.1-32 (2017-02-23)}{
+  \itemize{
+    \item{Extensively revised the handling of missing values (\code{NA}) in fitSpline so that it and calling functions, such as splitSplines and probeDF, will give a warning, rather than an error, when all data are missing or there are less than 4 distinct x values. All fitted values and derivates will be set to \code{NA}. Introduced the arguments \code{na.x.action} and \code{na.y.action} that allow control of what happens when there are missing values. In particular options have been introduced to allow for predictions and derivatives to be obtained when there are missing response values.}
+  }}
+\section{imageData Version 0.1-31 (2016-12-21)}{
+  \itemize{
+    \item{Revised some documentation}
+  }}
+\section{imageData Version 0.1-30 (2016-12-09)}{
+  \itemize{
+    \item{Rebuild with ggplot2 2.2.0.}
+  }}
+\section{imageData Version 0.1-29 (2016-11-16)}{
+  \itemize{
+    \item{For longitudinalPrime, added arguments \code{cartId}, \code{timeAfterStart} and \code{imageTimes}.}
+    \item{For probeDF, revised \code{which.plots} argument and added \code{which.traits} argument. The result is that there is more flexibility in which plots are produced for which traits.}
+        \item{Fixed a bug in probeDF that resulted in an error when other than a single factor was entered for \code{facet.x} or \code{facet.y}.}
+  }}
+\section{imageData Version 0.1-28 (2016-10-12)}{
+  \itemize{
+    \item{For getDates, added arguments include.individuals and individuals to allow a column of identifiers for individuals to be included in the returned data.frame.}
+  }}
+\section{imageData Version 0.1-27 (2016-10-07)}{
+  \itemize{
+    \item{Centre xZones by removing the mean of xZones in designFactors.}
+  }}
 \section{imageData Version 0.1-26 (2016-10-06)}{
   \itemize{
     \item{Rebuild under R 3.4.0.}
   }}
 \section{imageData Version 0.1-25 (2016-08-23)}{
   \itemize{
-    \item{For importExcel, changed argument \code{timeAfterPlanting} to \code{timeAfterStart}  and argument \code{plenting.time} to \code{startTime}.}
+    \item{For importExcel, changed argument \code{timeAfterPlanting} to \code{timeAfterStart}  and argument \code{planting.time} to \code{startTime}.}
     \item{For calcTimes, changed argument \code{originTime} to \code{startTime}.}
   }}
 \section{imageData Version 0.1-24 (2016-08-19)}{
   \itemize{
     \item{Added a new function calcTimes to calculate intervals and time positions within intervals from imaging times. It allows a choice of unit for the interval.}
-    \item{Removed the calcuation of time values from imagtimesPlot and added arguments \code{intervals} and \code{timePositions} to allow the use to specify the names of the columns to be plotted.}
+    \item{Removed the calculation of time values from imagtimesPlot and added arguments \code{intervals} and \code{timePositions} to allow the use to specify the names of the columns to be plotted.}
   }}
 \section{imageData Version 0.1-23 (2016-08-17)}{
   \itemize{
@@ -76,7 +134,7 @@
   }}
 \section{imageData Version 0.1-12 (2015-11-11)}{
   \itemize{
-    \item{Removed the creation of design factors and covariates from longitudinalPrime and ade function designFactors to dot his separately, if needed.}
+    \item{Removed the creation of design factors and covariates from longitudinalPrime and add function designFactors to do this separately, if needed.}
     \item{replaced `Water' in `Water.Total' in intervalWUI with the value of \code{water.name}.}
   }}
 \section{imageData Version 0.1-11 (2015-11-02)}{
@@ -111,7 +169,7 @@
   }}
 \section{imageData Version 0.1-5 (2015-08-16)}{
   \itemize{
-    \item Add probeDF that allows the comparison fo the smooths resulting from different values of df used for the smoothing spline.
+    \item Add probeDF that allows the comparison for the smooths resulting from different values of df used for the smoothing spline.
     \item Fix bug in calculating sum of Water Use and add water.use argument to allow for different names for the column.
     \item Make NULL default for lower and upper in anomPlot so can have intervals that are open at one end
   }}

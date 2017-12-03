@@ -9,7 +9,7 @@ The data is from an experiment in a Smarthouse in the Plant Accelerator. It is d
 \usage{data(RiceRaw.dat)}
 \format{A data.frame containing 14784 observations on 33 variables.}
 \references{
-Al-Tamimi, N., Brien, C.J., Oakey, H., Berger, B., Saade, S., Ho, Y. S., Schmockel, S. M., Tester, M. and Negrao, S. (2016) New salinity tolerance loci revealed in rice using high-throughput non-invasive phenotyping. submitted for publication.
+Al-Tamimi, N, Brien, C.J., Oakey, H., Berger, B., Saade, S., Ho, Y. S., Schmockel, S. M., Tester, M. and Negrao, S. (2016) New salinity tolerance loci revealed in rice using high-throughput non-invasive phenotyping. \emph{Nature Communications}, \bold{7}, 13342.
 }
 \source{It will be made available on Dryad}
 \keyword{datasets}

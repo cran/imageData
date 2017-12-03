@@ -1,30 +1,38 @@
 #Functions for calculating derived responses
 #Function to get the values for specified times and, optionally, a column with the times factor 
 "getDates" <- function(responses, times.factor = "Days", data, 
-                       which.times, suffix = NULL, include.times.factor = FALSE)
-{ n <- dim(data)[1]
+                       which.times, suffix = NULL, include.times.factor = FALSE,
+                       include.individuals = FALSE, individuals = "Snapshot.ID.Tag")
+{ 
+  n <- dim(data)[1]
   subset <- rep(FALSE, n)
   for (day in which.times)
-  { this.times <- data[times.factor] == day
+  { 
+    this.times <- data[times.factor] == day
     subset <- subset | this.times
   }
   data.sub <- data[subset, ]
   data.sub <- data.sub[do.call(order, data.sub), ]
   if (!is.null(suffix))
-    new.responses <- unlist(lapply(responses, function(name, suffix){paste(name,suffix,sep=".")}, 
-                            suffix=suffix))
+    new.responses <- unlist(lapply(responses, 
+                                   function(name, suffix){paste(name,suffix,sep=".")}, 
+                                   suffix=suffix))
   else
     new.responses <- responses
-  if (!include.times.factor)
-    data.sub <- data.sub[responses]
-  else
-  { data.sub <- data.sub[c(responses,times.factor)]
-    if (!is.null(suffix))
-      days.name <- paste(times.factor,suffix,sep=".")
-    else
-      days.name <- times.factor
-    new.responses <- c(new.responses, days.name)
+  if (include.individuals)
+  {
+    responses <- c(responses,individuals)
+    new.responses <- c(new.responses,individuals)
   }
+  if (include.times.factor)
+  {
+    responses <- c(responses,times.factor)
+    if (!is.null(suffix))
+      new.responses <- c(new.responses, paste(times.factor,suffix,sep="."))
+    else
+      new.responses <- c(new.responses,times.factor)
+  }
+  data.sub <- data.sub[responses]
   names(data.sub) <- new.responses 
   return(data.sub)
 }

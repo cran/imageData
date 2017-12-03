@@ -21,7 +21,8 @@ For an overview of the use of these functions and an example see below.
 (i) Data\cr\cr
 
 \code{\link{RiceRaw.dat}} 
-  \tab Will add a data soon.\cr\cr
+  \tab Data for an experiment to investigate a rice \cr
+       germplasm panel.\cr\cr
 
 (ii) Data frame manipulation\cr\cr
 
@@ -241,12 +242,11 @@ klimit <- 0
 for (k in 1:nresp)
 { 
   klimit <- klimit + 1
-  plt <- longiPlot(data = longi.dat, response = responses.longi[k], 
-                   y.title = titles[k], x="xDays+35.42857143", printPlot=FALSE)
-  plt <- plt + geom_vline(xintercept=29, linetype="longdash", size=1) +
-               scale_x_continuous(breaks=seq(28, 42, by=2)) + 
-               scale_y_continuous(limits=limits[[klimit]])
-  print(plt)
+  longiPlot(data = longi.dat, response = responses.longi[k], 
+            y.title = titles[k], x="xDays+35.42857143", 
+            ggplotFuncs = list(geom_vline(xintercept=29, linetype="longdash", size=1), 
+                               scale_x_continuous(breaks=seq(28, 42, by=2)),
+                               scale_y_continuous(limits=limits[[klimit]])))
 }
 
 
@@ -256,11 +256,11 @@ nresp.smooth <- length(responses.smooth.plot)
 limits <- list(c(0,1000), c(0,100), c(0.0,0.40))
 for (k in 1:nresp.smooth)
 { 
-  plt <- longiPlot(data = longi.dat, response = responses.smooth.plot[k], 
-                   y.title = titles.smooth[k], x="xDays+35.42857143", printPlot=FALSE)
-  plt <- plt + geom_vline(xintercept=29, linetype="longdash", size=1) +
-               scale_x_continuous(breaks=seq(28, 42, by=2)) + 
-               scale_y_continuous(limits=limits[[k]])
+  longiPlot(data = longi.dat, response = responses.smooth.plot[k], 
+            y.title = titles.smooth[k], x="xDays+35.42857143", 
+            ggplotFuncs = list(geom_vline(xintercept=29, linetype="longdash", size=1), 
+                               scale_x_continuous(breaks=seq(28, 42, by=2)),
+                               scale_y_continuous(limits=limits[[klimit]])))
   print(plt)
 }
 
@@ -414,14 +414,13 @@ limits <- with(longi.SIIT.dat, list(c(min(Area.smooth.AGR.diff, na.rm=TRUE),
 #Plots
 for (k in 1:nresp)
 { 
-  plt <- longiPlot(data = longi.SIIT.dat, x="xDays+35.42857143", 
-                   response = responses.SIIT[k], 
-                   y.title=responses.SIIT[k], 
-                   facet.x="Smarthouse", facet.y=".", printPlot=FALSE, )
-  plt <- plt + geom_vline(xintercept=29, linetype="longdash", size=1) +
-               scale_x_continuous(breaks=seq(28, 42, by=2)) + 
-               scale_y_continuous(limits=limits[[k]])
-  print(plt)
+  longiPlot(data = longi.SIIT.dat, x="xDays+35.42857143", 
+            response = responses.SIIT[k], 
+            y.title=responses.SIIT[k], 
+            facet.x="Smarthouse", facet.y=".", 
+            ggplotFuncs = list(geom_vline(xintercept=29, linetype="longdash", size=1), 
+                               scale_x_continuous(breaks=seq(28, 42, by=2)),
+                               scale_y_continuous(limits=limits[[klimit]])))
 }
 
 #'## 7b) Calculate interval SIITs and check for large values for SIIT for Days 31to35
@@ -453,5 +452,5 @@ print(plt)
 remove(tmp)
 }}
 \references{
-Al-Tamimi, N, Brien, C.J., Oakey, H., Berger, B., Saade, S., Ho, Y. S., Schmockel, S. M., Tester, M. and Negrao, S. (2016) New salinity tolerance loci revealed in rice using high-throughput non-invasive phenotyping. submitted for publication.
+Al-Tamimi, N, Brien, C.J., Oakey, H., Berger, B., Saade, S., Ho, Y. S., Schmockel, S. M., Tester, M. and Negrao, S. (2016) New salinity tolerance loci revealed in rice using high-throughput non-invasive phenotyping. \emph{Nature Communications}, \bold{7}, 13342.
 }

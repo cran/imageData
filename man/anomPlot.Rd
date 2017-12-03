@@ -31,7 +31,7 @@ anomPlot(data, x="xDays+24.16666667", response="Area.smooth.RGR",
              individual.}
  \item{breaks}{A \code{\link{numeric}} vector giving the breaks to be plotted on 
                the x-axis scale.}
- \item{vertical.line}{A \code{\link{numeric}} giving position on the the x-axis 
+ \item{vertical.line}{A \code{\link{numeric}} giving position on the x-axis 
                       at which a vertical line is to be drawn. If \code{NULL}, 
                       no line is drawn.}
  \item{groupsFactor}{A \code{\link{factor}} giving the name of a 
@@ -74,7 +74,7 @@ anomPlot(data, x="xDays+24.16666667", response="Area.smooth.RGR",
                    are printed for the anomalous individuals.}
  \item{na.rm}{A \code{\link{logical}} indicating whether \code{NA} values should 
               be stripped before the testing proceeds.}
- \item{... }{allows for arguments to be pased to \code{\link{longiPlot}}.}
+ \item{... }{allows for arguments to be passed to \code{\link{longiPlot}}.}
 }
 \value{A \code{\link{list}} with three components: 
        \enumerate{
@@ -82,14 +82,14 @@ anomPlot(data, x="xDays+24.16666667", response="Area.smooth.RGR",
                 of \code{data} and the \code{\link{logical}} identifying whether 
                 or not an individual is anomalous; 
           \item \code{innerPlot}, an object of class \code{ggplot} storing the 
-                longitudinal plot of the individuals that are not anamalous; 
+                longitudinal plot of the individuals that are not anomalous; 
           \item \code{outerPlot}, an object of class \code{ggplot} storing the 
-                longitudinal plot of only the individuals that are anamalous.} 
+                longitudinal plot of only the individuals that are anomalous.} 
        The name of the column indicating anomalous individuals will be result of 
        concatenating the \code{response}, \code{\link{anom}} and, if it is not 
        \code{NULL},  \code{suffix.interval}, each separated by a full stop. 
        The \code{ggplot} objects can be plotted using \code{print} and can be 
-       modifed by adding \code{ggplot} functions before printing. If there are 
+       modified by adding \code{ggplot} functions before printing. If there are 
        no observations to plot, \code{NULL} will be returned for the plot.}
 \author{Chris Brien}
 \seealso{\code{\link{anom}}, \code{\link{intervalValueCalculate}}, \code{\link{ggplot}}.}

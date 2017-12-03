@@ -2,20 +2,25 @@
 \alias{probeDF}
 \title{Compares, for a set of specified values of df, a response and the smooths of it, possibly along with growth rates calculated from the smooths}
 \description{Takes a \code{response} and, for each \code{individual}, uses 
-             \code{smooth.spline} to smooth its values for each of the degrees 
-             of freedom values in \code{df}. Provided \code{get.rates} is \code{TRUE},
+             \code{\link{splitSplines}} to smooth its values for each individual 
+             using  the degrees of freedom values in \code{df}. 
+             Provided \code{get.rates} is \code{TRUE},
              both the Absolute Growth Rates (AGR) and the Relative Growth Rates (RGR) 
              are calculated for each smooth, either using differences or first 
              derivatives. A combination of the unsmoothed and smoothed 
              values, as well as the AGR and RGR, can be plotted for each value in 
              \code{df}. Note that the arguments that modify the plots apply to all 
-             plots that are produced.}
+             plots that are produced. The handling of missing values is controlled 
+             via \code{na.x.action} and \code{na.y.action}}
 \usage{
 probeDF(data, response = "Area", xname="xDays", individuals="Snapshot.ID.Tag", 
-        na.rm = FALSE, df, get.rates = TRUE, rates.method="differences", 
+        na.x.action="exclude", na.y.action = "exclude", 
+        df, correctBoundaries = FALSE, 
+        get.rates = TRUE, rates.method="differences", 
         times.factor = "Days", x = NULL, 
         facet.x = "Treatment.1", facet.y =   "Smarthouse", 
-        which.plots = c("smoothed", "AGR", "RGR"), ggplotFuncs = NULL, 
+        which.traits = c("response", "AGR", "RGR"),
+        which.plots = "smoothedonly", ggplotFuncs = NULL, 
         ...)}
 \arguments{
  \item{data}{A \code{\link{data.frame}} containing the data.}
@@ -29,10 +34,39 @@ probeDF(data, response = "Area", xname="xDays", individuals="Snapshot.ID.Tag",
              \code{\link{factor}}(s) that define the subsets of the \code{data} 
              for which each subset corresponds to the \code{response} values for 
              an individual.}
- \item{na.rm}{A \code{logical} indicating whether or not rows of \code{data} 
-              with \code{NA}s are to be removed prior to smoothing.}
+ \item{na.x.action}{A \code{character} string that specifies the action to 
+            be taken when values of \code{x} are \code{NA}. The possible 
+            values are \code{fail}, \code{exclude} or \code{omit}. 
+            For \code{exclude} and \code{omit}, predictions and derivatives 
+            will only be obtained for nonmissing values of \code{x}. 
+            The difference between these two codes is that the returned 
+            \code{data.frame} will have as many rows as \code{data}, the 
+            missing values have been incorporated. }
+ \item{na.y.action}{A \code{character} string that specifies the action to 
+            be taken when values of \code{y}, or the \code{response}, are 
+            \code{NA}.  The possible values are \code{fail}, \code{exclude}, 
+            \code{omit}, \code{allx}, \code{trimx}, \code{ltrimx} or 
+            \code{rtrimx}. For  all options, except \code{fail}, missing 
+            values in \code{y} will be removed before smoothing. 
+            For \code{exclude} and \code{omit}, predictions 
+            and derivatives will be obtained only for nonmissing values of 
+            \code{x} that do not have missing \code{y} values. Again, the 
+            difference between these two is that, only for \code{exclude} 
+            will the missing values will be incorporated into the 
+            returned \code{data.frame}. For \code{allx}, predictions and 
+            derivatives will be obtained for all nonmissing \code{x}. 
+            For \code{trimx}, they will be obtained for all nonmissing 
+            \code{x} between the first and last nonmissing \code{y} values 
+            that have been ordered for \code{x}; for \code{ltrimx} and 
+            \code{utrimx} either the lower or upper missing \code{y} 
+            values, respectively, are trimmed.}
  \item{df}{A \code{\link{numeric}} specifying the set of degrees of freedom to 
               be probed.}
+ \item{correctBoundaries}{A \code{\link{logical}} indicating whether the fitted 
+            spline values are to have the method of Huang (2001) applied 
+            to them to correct for estimation bias at the end-points. Note that 
+            if \code{rates.method} is set to \code{"derivatives"} then it is not 
+            possible to have \code{correctBoundaries} set to \code{TRUE}.}
  \item{get.rates}{A \code{\link{logical}} specifying whether or not the growth 
               rates (AGR and RGR) are to be computed and stored.}
  \item{rates.method}{A \code{\link{character}} specifying the method to use in 
@@ -50,12 +84,16 @@ probeDF(data, response = "Area", xname="xDays", individuals="Snapshot.ID.Tag",
  \item{facet.y}{A \code{\link{data.frame}} giving the variable to be used to 
                 form subsets to be plotted in separate rows of plots.
                 Use \code{"."} if a split into columns is not wanted.}
+ \item{which.traits}{A \code{\link{character}} giving the traits that are to be 
+             produced. One of more of \code{response}, \code{AGR} and \code{RGR}. 
+             If \code{all}, all three traits are produced. The unsmoothed growth 
+             rates are not calculated if only smoothed plots are requested.}
  \item{which.plots}{A \code{\link{character}} giving the plots that are to be 
-             produced. If \code{none}, no plots are produced. If  \code{all}, 
-             plots of the unsmoothed response and, for each value of \code{df}, 
-             plots of the smoothed response, the AGR and  RGR are produced.  If 
-             \code{responseComparison}, a combined plot of  the unsmoothed 
-             response  and the smoothed response is produced for for each value 
+             produced. If \code{none}, no plots are produced. If \code{smoothedonly}, 
+             plots of the smoothed traits are plotted. If \code{bothseparatetly}, 
+             plots of the unsmoothed trait followed by the smoothed trait are 
+             produced for each trait. If \code{compare}, a combined plot of the 
+             unsmoothed trait and the smoothed trait is produced for each value 
              of \code{df}.}
  \item{ggplotFuncs}{A \code{\link{list}}, each element of which contains the 
                 results of evaluating a \code{\link{ggplot}} function. 

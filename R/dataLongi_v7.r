@@ -11,48 +11,6 @@ globalVariables(c("Snapshot.ID.Tag", "Snapshot.Time.Stamp", "Time.after.Planting
                   "Weight.Before", "Weight.After", "Water.Amount", "r", "Cumulative.Propn"),
                 "imageData", add = TRUE)
 
-"check.arg.values" <- function(arg.val, options)
-  #Function to check that arg.val is one of the allowed values
-  #and to return the position of the argument in the set of values
-  #that is stored in options
-{ kopt <- pmatch(arg.val, options)
-  if (is.na(kopt))
-    stop("Value for argument, ",arg.val,", is not an allowed option")
-  return(kopt)
-}
-
-"ginv" <- function(x, tol = .Machine$double.eps ^ 0.5)
-{ 
-  # computes Moore-Penrose inverse of a matrix
-  if (!is.matrix(x) | length(dim(x)) != 2 )
-  {
-    if (length(x) == 1)
-      if (abs(x) < tol)
-        geninv.x <- Inf
-      else
-        geninv.x <- 1/x
-    else
-      stop("x must be a matrix")
-  }
-  else
-  {
-    svd.x <- svd(x)
-    nonzero.x <- (svd.x$d > svd.x$d[1] * tol)
-    rank.x <- sum(nonzero.x)
-    geninv.x <- matrix(0, dim(x)[1], dim(x)[2])
-    if (rank.x)
-    { i <- matrix((1:length(nonzero.x))[nonzero.x], rank.x, 2)
-    geninv.x[i] <- 1/svd.x$d[nonzero.x]
-    if (all(nonzero.x))
-      geninv.x <- svd.x$v %*% geninv.x %*% t(svd.x$u)
-    else 
-      geninv.x <- svd.x$v[, nonzero.x] %*% geninv.x[nonzero.x, nonzero.x] %*% 
-      t(svd.x$u[, nonzero.x])
-    }
-  }
-  geninv.x
-}
-
 #Function to move RGB_SV1, RB_SV2, RGB_TV prefix to a suffix without the RBG_ 
 "pre2suffix" <- function(name)
 { prefix <- (strsplit(name, ".", fixed=TRUE))[[1]][1]
@@ -64,7 +22,7 @@ globalVariables(c("Snapshot.ID.Tag", "Snapshot.Time.Stamp", "Time.after.Planting
   return(name)
 }
 
-"importExcel" <- function(file, sheet="raw data", cartId = "Snapshot.ID.Tag", 
+"importExcel" <- function(file, sheet="raw data", sep = ",", cartId = "Snapshot.ID.Tag", 
                           imageTimes = "Snapshot.Time.Stamp", 
                           timeAfterStart = "Time.after.Planting..d.", 
                           prefix2suffix = TRUE, 
@@ -83,7 +41,8 @@ globalVariables(c("Snapshot.ID.Tag", "Snapshot.Time.Stamp", "Time.after.Planting
   
   #Input the raw imaging data
   if (grepl("csv", file))
-  { raw.dat <- read.csv(file, as.is=TRUE)
+  { 
+    raw.dat <- read.csv(file, sep = sep, as.is=TRUE)
     raw.dat[imageTimes] <- as.POSIXct(raw.dat[[imageTimes]], format = timeFormat)
   }
   else if(grepl("xlsx", file))
@@ -94,7 +53,8 @@ globalVariables(c("Snapshot.ID.Tag", "Snapshot.Time.Stamp", "Time.after.Planting
   
   #Rename columns to move prefix for camera View to become a suffix without the RGB_
   if (prefix2suffix)
-  { vars <- names(raw.dat)
+  { 
+    vars <- names(raw.dat)
     newvars <- sapply(vars[1:length(vars)], pre2suffix)
     names(newvars) <- NULL
     names(raw.dat)[match(vars, names(raw.dat))] <- newvars
@@ -126,13 +86,15 @@ globalVariables(c("Snapshot.ID.Tag", "Snapshot.Time.Stamp", "Time.after.Planting
 
 
 #Function to reduce imaging responses to those to be retained, forming longi.prime.dat
-"longitudinalPrime" <- function(data, idcolumns = c("Genotype.ID","Treatment.1"), 
-                                smarthouse.lev = c("SW"), 
+"longitudinalPrime" <- function(data, cartId = "Snapshot.ID.Tag", 
+                                imageTimes = "Snapshot.Time.Stamp", 
+                                timeAfterStart = "Time.after.Planting..d.", 
+                                idcolumns = c("Genotype.ID","Treatment.1"), 
+                                smarthouse.lev = NULL, 
                                 calcWaterLoss = TRUE, pixelsPERcm = 18)
 { #Extract variables from data to form data frame of longitudinal data
-  posndatevars <- c("Snapshot.ID.Tag","Time.after.Planting..d.",
-                    "Smarthouse","Lane","Position",
-                    "Snapshot.Time.Stamp")
+  posndatevars <- c(cartId,timeAfterStart,
+                    "Smarthouse","Lane","Position",imageTimes)
   imagevars <- c("Weight.Before","Weight.After","Water.Amount",
                  "Projected.Shoot.Area..pixels.",
                  "Area.SV1", "Boundary.Points.To.Area.Ratio.SV1", "Caliper.Length.SV1",
@@ -156,8 +118,11 @@ globalVariables(c("Snapshot.ID.Tag", "Snapshot.Time.Stamp", "Time.after.Planting
 
   #Add factors and variates needed in the analysis
   longi.prime.dat <- longi.prime.dat[do.call(order, longi.prime.dat), ]
+  if (is.null(smarthouse.lev))
+    smarthouse.lev <- unique(longi.prime.dat$Smarthouse)
   longi.prime.dat <- within(longi.prime.dat, 
-                            { Smarthouse <- factor(Smarthouse, levels=smarthouse.lev)
+                            { 
+                              Smarthouse <- factor(Smarthouse, levels=smarthouse.lev)
                               Days <- as.numeric(Time.after.Planting..d.)
                               xDays <- Days - mean(unique(Days))
                               xPosn <- Position - mean(unique(Position))
@@ -174,8 +139,9 @@ globalVariables(c("Snapshot.ID.Tag", "Snapshot.Time.Stamp", "Time.after.Planting
 if (all(c("Genotype.ID","Treatment.1") %in% posndatevars))
 {
   longi.prime.dat <- within(longi.prime.dat, 
-                            { Reps <- 1
-                            trts <- fac.combine(list(Genotype.ID,Treatment.1))
+                            { 
+                              Reps <- 1
+                              trts <- fac.combine(list(Genotype.ID,Treatment.1))
                             })
   for (t in levels(longi.prime.dat$trts))
   { which.indiv <- with(longi.prime.dat, 
@@ -209,8 +175,7 @@ longi.prime.dat <- within(longi.prime.dat,
                           })
 
 out.posndatevars <- c("Smarthouse","Lane","Position","Days",
-                      "Snapshot.ID.Tag", "xPosn", "Reps",
-                      "Snapshot.Time.Stamp", "Hour", "xDays")
+                      cartId,imageTimes,"xPosn", "Reps", "Hour", "xDays")
 out.imagevars <- c("Weight.Before","Weight.After","Water.Amount", "Water.Loss", 
                    "Area", "Area.SV", "Area.TV", 
                    "Area.SV1", "Area.SV2", "Image.Biomass", 
@@ -336,6 +301,8 @@ return(longi.prime.dat)
     data <- within(data, { SHZones <- fac.combine(list(Smarthouse,Zones))
                            ZMainplots <- fac.combine(list(ZLane,Mainplots))
                            xZones <- as.numeric(Zones)
+                           xZones <- xZones - mean(unique(xZones))
+                           
                          })
 
 
@@ -368,7 +335,16 @@ return(longi.prime.dat)
     vars <- c(vars, times.diffs)
   if (any(is.na(match(vars, names(data)))))
     stop("One or more of response, INDICES and times.factor are not in data")
-
+  if (any(is.na(data[[times.factor]])))
+    warning(paste("Some values of ",times.factor,
+                  " are missing, which can result in merge producing a large data.frame", 
+                  sep = ""))
+  if (any(unlist(lapply(as.list(data[INDICES]), 
+                        function(f)
+                          any(is.na(f))))))
+    warning(paste("Some values of the factors in INDICES are missing, ",
+                  "which can result in merge producing a large data.frame", sep = ""))
+  
   #Get columns needed for calculation and order for INDICES, then times.factor
   tmp <- data[vars]
   tmp <- tmp[do.call(order, tmp), ]
@@ -376,15 +352,20 @@ return(longi.prime.dat)
   #Form time differences in a way that every first day is the same Day
   # - setting first time point to missing results in the growth rates also being NA
   if (!(times.diffs %in% names(tmp)))
-  { tmp[times.diffs] <- as.numfac(tmp[[times.factor]])
+  { 
+    tmp[times.diffs] <- as.numfac(tmp[[times.factor]])
     tmp[times.diffs] <- calcLagged(tmp[[times.diffs]], operation ="-")
-    tmp <- by(tmp, INDICES = as.list(tmp[INDICES], simplify=FALSE), 
-               function(tmp, times.diffs)
-               { tmp[[times.diffs]][1] <- NA
-                 return(tmp)                   
-               }, 
-               times.diffs = times.diffs)  
+    tmp <- split(tmp, f = as.list(tmp[INDICES], simplify=FALSE))
+    tmp <- lapply(tmp, 
+                  function(tmp, times.diffs)
+                  { 
+                    if (nrow(tmp) > 0)
+                      tmp[[times.diffs]][1] <- NA
+                    return(tmp)                   
+                  }, 
+                  times.diffs = times.diffs)
     tmp <- do.call(rbind, tmp)
+    rownames(tmp) <- NULL
   }
 
   #Form AGR (because Day.diffs is NA for first day, so will the growth rates)
@@ -419,95 +400,397 @@ return(longi.prime.dat)
                                                FUN = RGRdiff, 
                                                time.diffs = tmp[[times.diffs]]))
   }
-  data <- merge(data, tmp, sort = FALSE, all.x = TRUE)
+  #Remove NAs in INDICES and time.factor in tmp
+  if (any(is.na(tmp[[times.factor]])))
+    tmp <- tmp[!is.na(tmp[[times.factor]]), ]
+  if (any(unlist(lapply(as.list(tmp[INDICES]), 
+                        function(f)
+                          any(is.na(f))))))
+    for (f in INDICES)
+      tmp <- tmp[!is.na(tmp[f]),]
+  tmp <- tmp[,-match(responses,names(tmp))]
+  if (times.diffs %in% names(data))
+    tmp <- tmp[,-match(times.diffs,names(tmp))]
+  data <- merge(data, tmp, by = c(INDICES, times.factor), sort = FALSE, all.x = TRUE)
+  data  <- data[do.call(order, data),]
   return(data)
 }
 
+#Function to fit splines, including possible boundary correction from Huang (2001)
+ncsSpline <- function(vars, correctBoundaries = FALSE, 
+                      df = NULL, cv = FALSE,  ...)
+{
+  if (ncol(vars) != 2)
+    stop("Must supply a two-column matrix or data.frame")
+  if (!correctBoundaries)
+  {
+    if (is.null(df))
+    { 
+      fity <- smooth.spline(vars, all.knots=TRUE, ...)
+    } else
+    { 
+      fity <- smooth.spline(vars, all.knots=TRUE, df=df, ...)
+    }
+    fit.spline <- list(x = fity$x, 
+                       y = fity$y, 
+                       lev = fity$lev,
+                       lambda = fity$lambda,
+                       df = fity$df,
+                       uncorrected.fit = fity)  
+  } else
+  {
+    nval <- nrow(vars)
+    W <- matrix(NA, nrow = nval, ncol = 4)
+    W2 <- matrix(NA, nrow = nval, ncol = 4)
+    W3 <- matrix(NA, nrow = nval, ncol = 4)
+    x <- vars[,1]
+    y <- vars[,2]
+    
+    # construct the four polynomials
+    W[,1] <- x^2/2-x^4/4+x^5/10
+    W[,2] <- x^3/6-x^4/6+x^5/20
+    W[,3] <- x^4/4-x^5/10
+    W[,4] <- -x^4/12+x^5/20
+    if (is.null(df))
+    {
+      lam <- vector(mode = "numeric", length = nval)
+      rss <- vector(mode = "numeric", length = nval)
+      tr <- vector(mode = "numeric", length = nval)
+      gcv <- vector(mode = "numeric", length = nval)
+      # use GCV to search for best lambda
+      for(i in 1:nval) 
+      {
+        u <- -7+7.0*(i-1)/(nval-1)
+        lam[i] <- 10^u
+        slam <- lam[i]
+        # get regular fit for y and four polynomials
+        fity <- smooth.spline(x,y,all.knots=TRUE,spar=slam, ...)
+        W2[,1] <- smooth.spline(x,W[,1],all.knots=TRUE,spar=slam, ...)$y
+        W2[,2] <- smooth.spline(x,W[,2],all.knots=TRUE,spar=slam, ...)$y
+        W2[,3] <- smooth.spline(x,W[,3],all.knots=TRUE,spar=slam, ...)$y
+        W2[,4] <- smooth.spline(x,W[,4],all.knots=TRUE,spar=slam, ...)$y
+        #Apply boundary correction to the fitted spline
+        W2 <- W-W2
+        h <- solve(t(W2)%*%W2,t(W2)%*%(y-fity$y))
+        # get the newfit, rss and calculate the trace of new S
+        newfit <- fity$y+W2%*%h
+        rss[i] <- sum((newfit-y)^2)
+        W3[,1] <- smooth.spline(x,W2[,1],all.knots=TRUE,spar=slam, ...)$y
+        W3[,2] <- smooth.spline(x,W2[,2],all.knots=TRUE,spar=slam, ...)$y
+        W3[,3] <- smooth.spline(x,W2[,3],all.knots=TRUE,spar=slam, ...)$y
+        W3[,4] <- smooth.spline(x,W2[,4],all.knots=TRUE,spar=slam, ...)$y
+        W3 <- W2-W3
+        K <- solve(t(W2)%*%W2,t(W3))
+        tr[i] <- sum(fity$lev)+sum(diag(K%*%W2))
+        gcv[i] <- nval*rss[i]/(nval-tr[i])^2
+      }
+      # get the optimal lambda and apply to y and the four polynomials
+      lam.opt<- lam[order(gcv)[1]]
+      slam <- lam.opt
+      fity <- smooth.spline(x,y,all.knots=TRUE,spar=slam)
+      W2[,1] <- smooth.spline(x,W[,1],all.knots=TRUE,spar=slam, ...)$y
+      W2[,2] <- smooth.spline(x,W[,2],all.knots=TRUE,spar=slam, ...)$y
+      W2[,3] <- smooth.spline(x,W[,3],all.knots=TRUE,spar=slam, ...)$y
+      W2[,4] <- smooth.spline(x,W[,4],all.knots=TRUE,spar=slam, ...)$y
+    } else #df is specified
+    {
+      # get regular fit for y and four polynomials for specified df
+      fity <- smooth.spline(x,y,all.knots=TRUE,df=df, ...)
+      W2[,1] <- smooth.spline(x,W[,1],all.knots=TRUE,df=df, ...)$y
+      W2[,2] <- smooth.spline(x,W[,2],all.knots=TRUE,df=df, ...)$y
+      W2[,3] <- smooth.spline(x,W[,3],all.knots=TRUE,df=df, ...)$y
+      W2[,4] <- smooth.spline(x,W[,4],all.knots=TRUE,df=df, ...)$y
+      # calculate the trace of new S
+      W3[,1] <- smooth.spline(x,W2[,1],all.knots=TRUE,df=df, ...)$y
+      W3[,2] <- smooth.spline(x,W2[,2],all.knots=TRUE,df=df, ...)$y
+      W3[,3] <- smooth.spline(x,W2[,3],all.knots=TRUE,df=df, ...)$y
+      W3[,4] <- smooth.spline(x,W2[,4],all.knots=TRUE,df=df, ...)$y
+      W3 <- W2-W3
+      K <- solve(t(W2)%*%W2,t(W3))
+    }
+    #Apply boundary correction to the fitted spline
+    W2 <- W-W2
+    h <- solve(t(W2)%*%W2,t(W2)%*%(y-fity$y))
+    newy <- as.vector(fity$y+W2%*%h)
+    # get the newfit leverage values of new S
+    lev <- as.vector(fity$lev+diag(W2%*%K))
+    tr <- sum(lev)
+    rss <- sum((y - newy)^2)
+    lambda <- nval*rss/(nval-tr)^2
+    # Set up list to return
+    fit.spline <- list(x = fity$x, 
+                       y = newy, 
+                       lev = lev,
+                       lambda = lambda,
+                       df = df,
+                       uncorrected.fit = fity)  
+  }
+  class(fit.spline) <- "ncsSpline"
+  return(fit.spline)
+}
+
+predict.ncsSpline <- function(object, x, correctBoundaries = FALSE, 
+                             df = NULL, cv = FALSE,  ...)
+{
+  if (class(object) != "ncsSpline")
+    stop("Must supply a an object of class ncsSpline")
+  fit <- predict(object$uncorrected.fit, x = x)
+  
+  #Correct boundaries
+  if (correctBoundaries)
+  {
+    nval <- length(x)
+    W <- matrix(NA, nrow = nval, ncol = 4)
+    W2 <- matrix(NA, nrow = nval, ncol = 4)
+    vars <- data.frame(x = object$uncorrected.fit$x, 
+                       yin = object$uncorrected.fit$yin)
+    vars <- merge(as.data.frame(fit), vars, all.x = TRUE)
+    vars$yin[is.na(vars$yin)] <- vars$y[is.na(vars$yin)]
+    vars <- vars[order(vars$x), ]
+    x <- vars$x
+
+    # construct the four polynomials
+    W[,1] <- x^2/2-x^4/4+x^5/10
+    W[,2] <- x^3/6-x^4/6+x^5/20
+    W[,3] <- x^4/4-x^5/10
+    W[,4] <- -x^4/12+x^5/20
+    if (is.null(df))
+    {
+      slam <- object$lambda
+      # get regular fit for y and four polynomials
+      W2[,1] <- smooth.spline(x,W[,1],all.knots=TRUE,spar=slam, ...)$y
+      W2[,2] <- smooth.spline(x,W[,2],all.knots=TRUE,spar=slam, ...)$y
+      W2[,3] <- smooth.spline(x,W[,3],all.knots=TRUE,spar=slam, ...)$y
+      W2[,4] <- smooth.spline(x,W[,4],all.knots=TRUE,spar=slam, ...)$y
+    } else #df is specified
+    {
+      # get regular fit for y and four polynomials for specified df
+      W2[,1] <- smooth.spline(x,W[,1],all.knots=TRUE,df=df, ...)$y
+      W2[,2] <- smooth.spline(x,W[,2],all.knots=TRUE,df=df, ...)$y
+      W2[,3] <- smooth.spline(x,W[,3],all.knots=TRUE,df=df, ...)$y
+      W2[,4] <- smooth.spline(x,W[,4],all.knots=TRUE,df=df, ...)$y
+    }
+    #Apply boundary correction to the fitted spline
+    W2 <- W-W2
+    h <- solve(t(W2)%*%W2,t(W2)%*%(vars$yin-vars$y))
+    fit <- list(x = vars$x, 
+                y = as.vector(vars$y+W2%*%h))  
+  }
+  return(fit)
+}
 
 #Function to fit a spline using smooth.spline
-"fitSpline" <- function(data, response, x, df=NULL, deriv=NULL, suffices.deriv=NULL, 
-                        RGR=NULL, na.rm=FALSE)
-{ #check input arguments
+"fitSpline" <- function(data, response, x, df=NULL, correctBoundaries = FALSE, 
+                        deriv=NULL, suffices.deriv=NULL, RGR=NULL, 
+                        na.x.action="exclude", na.y.action = "exclude", ...)
+{ 
+  #check input arguments
+  impArgs <- match.call()
+  if ("na.rm"%in% names(impArgs))
+    stop("na.rm has been deprecated; use na.x.action and na.y.action")
+  na.x <- na.y <- c("exclude", "omit", "fail")
+  na.y <- c(na.y, "allx", "trimx", "ltrimx", "utrimx")
+  na.act.x <- na.x[check.arg.values(na.x.action, options=na.x)]
+  na.act.y <- na.y[check.arg.values(na.y.action, options=na.y)]  
+  
+  if (correctBoundaries & !is.null(deriv))
+    stop("Unable to estimate derivates when correctBoundaries = TRUE")
+  
   if (!is.null(deriv) & !is.null(suffices.deriv))
     if (length(deriv) != length(suffices.deriv))
       stop("The number of names supplied must equal the number of derivatives specified")
   if (!is.null(RGR)) 
+  {
     if (!(1 %in% deriv))
       stop("To form the RGR, 1 must be included in deriv so that the first derivative is obtained")
-  else
-    kagr <- match(1, deriv)
-  #Convert any infinite values to missign
-  if (any(is.infinite(data[[response]])))
+    else
+      kagr <- match(1, deriv)
+  }
+  
+  tmp <- data
+  #Convert any infinite values to missing
+  if (any(is.infinite(tmp[[response]])))
   {
-    data[[response]][is.infinite(data[[response]])] <- NA
+    tmp[[response]][is.infinite(tmp[[response]])] <- NA
     warning("Some infinite values have been converted to missing")
   }
-  #Remove NAs if na.rm is TRUE
-  if (na.rm & (sum(is.na(data[[response]])) < (length(data[[response]]-1))))
-    data <- data[!is.na(data[[response]]), ]
-  if (nrow(data)==0)
-    stop("Zero-length response supplied")
-  if (any(is.na(data[response])))
-  { #Have some NAs and so all fitted values are set to NA
-    warning("Some response values are NA - all fitted values have been set to NA")
-    fit <- list(data[[x]], rep(NA, nrow(data)))
-    names(fit) <- c(x, paste(response,"smooth",sep="."))
-    if (!is.null(deriv))
-    { for (d in deriv)
-      if (is.null(suffices.deriv))
-        fit[[paste(response,".smooth.dv",d,sep="")]] <- rep(NA, nrow(data))
-      else
-      { k <- match(d, deriv)
-        fit[[paste(response,"smooth", suffices.deriv[k], sep=".")]] <- rep(NA, nrow(data))
-      }
-      #Add RGR if required
-      if (!is.null(RGR))
-        fit[[paste(response,"smooth",RGR,sep=".")]] <- rep(NA, nrow(data))
-    }
+  
+  #Set up fit data.frame
+  fit.names <- c(x, paste(response,"smooth",sep="."))
+  if (!is.null(deriv))
+  {
+    if (is.null(suffices.deriv))
+      fit.names <- c(fit.names, paste(response,".smooth.dv",deriv,sep=""))
+    else
+      fit.names <- c(fit.names, paste(response,"smooth", suffices.deriv, sep="."))
+  }
+  #Add RGR if required
+  if (!is.null(RGR))
+    fit.names <- c(fit.names, paste(response,"smooth",RGR,sep="."))
+  fit <- vector(mode = "list", length = length(fit.names))
+  names(fit) <- fit.names
+  
+  #Process missing values
+  #tmp will have no missing values and is what is used in the fitting
+  #data retains missing values and is used to obtain the returned data.frame
+  #x.pred has the x-values for which predictions are required 
+  #  - it should include all the x values that are returned by smooth.spline;
+  #    it will not include any x values that are missing, but may include
+  #    x values for which there are missing y values, depending on the settings 
+  #    of na.y.action, and these x values wil not have been supplied to smooth.spline.
+  if (nrow(tmp) == 0)
+  {
+    warning("A response with no data values supplied")
   } else
-  { #smooth and obtain any derivatives required
-    if (is.null(df))
-    { fit.spline <- with(data, 
-                         smooth.spline(data[c(x, response)], all.knots=TRUE))
-    } else
-    { fit.spline <- with(data, 
-                         smooth.spline(data[c(x, response)], all.knots=TRUE, df=df))
+  {
+    #remove any observations with missing x values
+    if (na.act.x %in% c("omit", "exclude"))
+    {
+      tmp <- tmp[!is.na(tmp[[x]]), ]
+      if (na.act.x == "omit")
+        data <- tmp
     }
-    fit <- list(fit.spline$x, fit.spline$y)
-    names(fit) <- c(x, paste(response,"smooth",sep="."))
-    if (!is.null(deriv))
-    { for (d in deriv)
-      if (is.null(suffices.deriv))
-        fit[[paste(response,".smooth.dv",d,sep="")]] <- predict(fit.spline, deriv=d)$y
-      else
-      { k <- match(d, deriv)
-        fit[[paste(response,"smooth", suffices.deriv[k], sep=".")]] <- predict(fit.spline, deriv=d)$y
+    x.pred <- tmp[[x]]
+    #Are there any missing response values now
+    if (na.act.y != "fail")
+    {
+      if (na.act.y %in% c("omit", "exclude"))
+      {
+        x.pred <- tmp[!is.na(tmp[[response]]), ][[x]]
+      } else
+      {
+        if (grepl("trimx", na.act.y, fixed = TRUE))
+        {
+          tmp <- tmp[order(tmp[[x]]), ]
+          y.nonmiss <- c(1:nrow(tmp))[!is.na(tmp[[response]])]
+          x.pred <- tmp[[x]]
+          if (length(y.nonmiss) > 0)
+          {
+            if (na.act.y %in% c("trimx", "ltrimx"))
+            {
+              x.pred <- x.pred[y.nonmiss[1]:length(tmp[[x]])]
+              y.nonmiss <- y.nonmiss - y.nonmiss[1] + 1
+            }
+            if (na.act.y %in% c("trimx", "utrimx"))
+              x.pred <- x.pred[1:y.nonmiss[length(y.nonmiss)]]
+            y.nonmiss <- diff(y.nonmiss)
+            if (any(y.nonmiss >= 3))
+              warning("There are runs of 3 or more contiguous y values that are missing")
+          } else
+            x.pred <- NULL
+        }
       }
-      #Add RGR if required
-      if (!is.null(RGR))
-      { rsmooth <- paste(response,"smooth",sep=".")
+      tmp <- tmp[!is.na(tmp[[response]]), ]
+      if (na.act.y == "omit")
+        data <- tmp
+    }
+  }
+  
+  #What are the distinct x values
+  distinct.xvals <- sort(unique(tmp[[x]]))
+  tol <- 1e-06 * IQR(distinct.xvals)
+  distinct.xvals <- remove.repeats(distinct.xvals, tolerance = tol)
+  if (length(distinct.xvals) < 4) 
+  { #< 4 distinct values and so all fitted values are set to NA
+    warning(paste("Need at least 4 distinct x values to fit a spline",
+                  "- all fitted values set to NA", sep = " "))
+    fit <- as.data.frame(matrix(NA, nrow=nrow(data), ncol = length(fit.names)))
+    colnames(fit) <- fit.names
+    fit[x] <- data[[x]]
+  } else
+  { 
+    #smooth and obtain predictions corresponding to x.pred
+    fitcorrectBoundaries <- correctBoundaries
+    if (length(distinct.xvals) <= 5)
+    {
+      warning(paste("Need more than 5 distinct x values to correct the end-points of a spline",
+                    "- no corrections made", sep = " "))
+      fitcorrectBoundaries <- FALSE
+      fit.spline <- with(tmp, 
+                         ncsSpline(tmp[c(x, response)], 
+                                   correctBoundaries = fitcorrectBoundaries, 
+                                   df = df, ...))
+    } else
+    {
+      fit.spline <- with(tmp, 
+                         ncsSpline(tmp[c(x, response)], 
+                                   correctBoundaries = correctBoundaries, 
+                                   df = df, ...))
+    }
+    x.pred <- remove.repeats(sort(x.pred), tolerance = tol)
+    fit <- NULL
+    if (length(x.pred) == length(fit.spline$x))
+    {
+      if (all(abs(x.pred - fit.spline$x) < tol))
+        fit <- list(fit.spline$x, fit.spline$y)
+    }
+    #Need to refit for current x.pred
+    if (is.null(fit))
+      fit <- predict.ncsSpline(fit.spline, x = x.pred, 
+                               correctBoundaries = fitcorrectBoundaries)
+    names(fit) <- c(x, paste(response,"smooth",sep="."))
+    #get derivatives if required
+    if (!correctBoundaries & !is.null(deriv))
+    {
+      for (d in deriv)
+      {
         if (is.null(suffices.deriv))
-          fit[[paste(rsmooth,RGR,sep=".")]] <- fit[[paste(rsmooth,".dv",d,sep="")]]/fit[[rsmooth]]
+          fit[[paste(response,".smooth.dv",d,sep="")]] <- predict(fit.spline, x = x.pred, 
+                                                                  deriv=d)$y
         else
-        { k <- match(1, deriv)
-          fit[[paste(rsmooth,RGR,sep=".")]] <- fit[[paste(rsmooth, suffices.deriv[k], sep=".")]]/fit[[rsmooth]]
+        { 
+          k <- match(d, deriv)
+          fit[[paste(response,"smooth", 
+                     suffices.deriv[k], sep=".")]] <- predict(fit.spline, x = x.pred, 
+                                                              deriv=d)$y
+        }
+        #Add RGR if required
+        if (!is.null(RGR))
+        { 
+          rsmooth <- paste(response,"smooth",sep=".")
+          if (is.null(suffices.deriv))
+            fit[[paste(rsmooth,RGR,sep=".")]] <- fit[[paste(rsmooth,".dv",d,
+                                                            sep="")]]/fit[[rsmooth]]
+          else
+          { 
+            k <- match(1, deriv)
+            fit[[paste(rsmooth,RGR,sep=".")]] <- fit[[paste(rsmooth, suffices.deriv[k], 
+                                                            sep=".")]]/fit[[rsmooth]]
+          }
         }
       }
     }
+    fit <- as.data.frame(fit)
+    #Merge data and fit, preserving x-order in data
+    x.ord <- order(data[[x]])
+    fit <- merge(data[c(x,response)],fit, all.x = TRUE, sort = FALSE)
+    fit <- fit[,-match(response, names(fit))]
+    fit <- fit[order(fit[[x]]),]
+    fit[x.ord,] <- fit
   }
-  fit <- as.data.frame(fit)
+  rownames(fit) <- NULL
   return(fit)    
 }
 
 #Fit splines to smooth the longitudinal trends in the primary responses
 #Specify responses to be smoothed and then loop over them
-"splitSplines" <- function(data, response, x, INDICES, df = NULL, deriv = NULL, suffices.deriv=NULL, 
-                           RGR=NULL, na.rm = FALSE, sep=".")
-{ #Split data frame by each combination of the INDICES factors
+"splitSplines" <- function(data, response, x, INDICES, df = NULL, 
+                           correctBoundaries = FALSE, 
+                           deriv = NULL, suffices.deriv=NULL, RGR=NULL, sep=".", 
+                           na.x.action="exclude", na.y.action = "exclude", ...)
+{ 
+  impArgs <- match.call()
+  if ("na.rm"%in% names(impArgs))
+    stop("na.rm has been deprecated; use na.x.action and na.y.action")
+  
+  #Split data frame by each combination of the INDICES factors
+  old.names <- names(data)
   tmp <- split(data, as.list(data[INDICES]), sep=sep)
   #Fit splines for each combination of the INDICES factors
   tmp <- lapply(tmp, fitSpline, response=response, x = x, df=df, 
-                deriv=deriv, suffices.deriv=suffices.deriv,  RGR=RGR, na.rm=na.rm)
+                correctBoundaries = correctBoundaries, 
+                deriv=deriv, suffices.deriv=suffices.deriv,  RGR=RGR, 
+                na.x.action=na.x.action, na.y.action=na.y.action, ...)
   tmp <- do.call(rbind, tmp)
   ncols <- ncol(tmp)
   indices <- rownames(tmp)
@@ -524,8 +807,18 @@ return(longi.prime.dat)
       tmp[[INDICES[fac]]] <- as.numeric(tmp[[INDICES[fac]]])
   }
   tmp <- tmp[, c((ncols+1):length(tmp),1:ncols)]
-  tmp <- na.omit(tmp)
+  #Remove any pre-existing smoothed cols in data
+  tmp.smooth <- names(tmp)[-match(c(INDICES,x), names(tmp))]
+  tmp.smooth <- na.omit(match(tmp.smooth, names(data)))
+  if (length(tmp.smooth) > 0)
+    data <- data[ ,-tmp.smooth]
+  tmp <- tmp[!is.na(tmp[[x]]), ]
   data <- merge(data, tmp, all.x = TRUE, sort=FALSE)
+  #Rearrange columns so original column are followed by new columns
+  new.names <- names(data)
+  new.names <- new.names[-match(old.names, new.names)]
+  data <- data[c(old.names, new.names)]
+  rownames(data) <- NULL
   return(data)
 }
 
@@ -567,7 +860,7 @@ return(longi.prime.dat)
   return(x)
 }
 
-#Function to test if a any values in a set of values are anomalous
+#Function to test if any values in a set of values are anomalous
 # in being outside specified limits 
 "anom" <- function(x, lower=NULL, upper=NULL, na.rm = TRUE)
 { if (is.null(lower))
@@ -875,27 +1168,66 @@ return(longi.prime.dat)
   invisible(list(data = data, innerPlot = innerPlot, outerPlot = outerPlot))
 }
 
-"probeDF" <- function(data, response = "Area", xname="xDays", individuals="Snapshot.ID.Tag", 
-                      na.rm = FALSE, df, get.rates = TRUE, rates.method="differences", 
+
+"fac.getinFormula" <- function(formula = NULL, data = NULL, ...)
+#Get a list of the factors in a formula
+{ 
+  if (is.character(formula))
+  { 
+    formula <- as.formula(paste("~ ",formula, sep=""))
+  }
+  else
+  { 
+    if (!is.null(terms))  
+      formula <- as.formula(formula)
+  }
+  if (is.null(terms))
+    facs <- NULL
+  else
+    facs <- rownames(attr(terms(with(data, formula)), which="factor"))
+  return(facs)
+}
+
+
+"probeDF" <- function(data, response = "Area", xname="xDays", 
+                      individuals="Snapshot.ID.Tag", 
+                      na.x.action="exclude", na.y.action = "exclude", 
+                      df, correctBoundaries = FALSE, 
+                      get.rates = TRUE, rates.method="differences", 
                       times.factor = "Days", x = NULL, 
                       facet.x = "Treatment.1", facet.y = "Smarthouse", 
-                      which.plots = c("smoothed", "AGR", "RGR"), ggplotFuncs = NULL, ...)
+                      which.traits = c("response", "AGR", "RGR"), 
+                      which.plots = "smoothedonly", ggplotFuncs = NULL, ...)
 { 
+  #check input arguments
+  impArgs <- match.call()
+  if ("na.rm"%in% names(impArgs))
+    stop("na.rm has been deprecated; use na.x.action and na.y.action")
   options <- c("differences","derivative")
   opt <- options[check.arg.values(rates.method, options=options)]
-  options <- c("none", "responseComparison", "unsmoothed", "smoothed", "AGR", "RGR", "all")
-  plots <- options[unlist(lapply(which.plots, check.arg.values, options=options))]
-  if ("all" %in% plots)
-    plots <- c("unsmoothed", "smoothed", "AGR", "RGR")
-  if (any(c("AGR","RGR") %in% plots) & !get.rates)
+  options <- c("none", "smoothedonly", "bothseparately", "compare")
+  plots <- options[check.arg.values(which.plots, options=options)]
+  if (any(c("bothseparately", "compare") %in% plots))
+    plotunsmooth <- TRUE
+  else
+    plotunsmooth <- FALSE
+  options <- c("response", "AGR", "RGR", "all")
+  traits <- options[unlist(lapply(which.traits, check.arg.values, options=options))]
+  if ("all" %in% traits)
+    traits <- c("response", "AGR", "RGR")
+  
+  if (any(c("AGR","RGR") %in% traits) & !get.rates)
     stop("get.rates is FALSE but growth-rate plots have been requested")
+  else
+    if (!any(c("AGR","RGR") %in% traits) & get.rates)
+      get.rates <- FALSE
   
   #Form data.frame with just columns needed 
   v <- c(individuals, times.factor, xname, response)
   if (facet.x != ".")
-    v <- c(v, facet.x)
+    v <- c(v, fac.getinFormula(facet.x))
   if (facet.y != ".")
-    v <- c(v, facet.y)
+    v <- c(v, fac.getinFormula(facet.y))
   if (is.null(x))
     x <- xname
   #  else
@@ -907,16 +1239,23 @@ return(longi.prime.dat)
   
   #Smooth response and form growth rates
   response.smooth <- paste(response, "smooth", sep=".")
-  responses <- response.smooth 
+  responses.smooth <- response.smooth 
+  if (plotunsmooth & get.rates)
+  {
+    tmp <- splitContGRdiff(tmp, response, INDICES=individuals,
+                           which.rates = c("AGR","RGR"), times.factor=times.factor)
+  }
   for (degfree in df)
   { 
     if (opt == "differences")
     { 
-      tmp <- splitSplines(tmp, response, x=xname, INDICES = individuals, df = degfree, 
-                          na.rm = na.rm)
+      tmp <- splitSplines(tmp, response, x=xname, INDICES = individuals, 
+                          df = degfree, correctBoundaries = correctBoundaries, 
+                          na.x.action = na.x.action, na.y.action = na.y.action)
       if (get.rates)
       { 
-        responses <- c(responses, paste(response.smooth, c("AGR","RGR"), sep="."))
+        responses.smooth <- c(responses.smooth, 
+                              paste(response.smooth, c("AGR","RGR"), sep="."))
         tmp <- splitContGRdiff(tmp, response.smooth, INDICES=individuals,
                                which.rates = c("AGR","RGR"), times.factor=times.factor)
       } 
@@ -924,38 +1263,42 @@ return(longi.prime.dat)
     { 
       if (get.rates)
       { 
-        responses <- c(responses, paste(response.smooth, c("AGR","RGR"), sep="."))
+        responses.smooth <- c(responses.smooth, 
+                              paste(response.smooth, c("AGR","RGR"), sep="."))
         tmp <- splitSplines(tmp, response, x=xname, INDICES = individuals, deriv=1, 
-                            suffices.deriv="AGR", RGR="RGR", df = degfree, na.rm = na.rm)
+                            suffices.deriv="AGR", RGR="RGR", df = degfree, 
+                            na.x.action = na.x.action, na.y.action = na.y.action)
       }
       else
-        tmp <- splitSplines(tmp, response, x=xname, INDICES = individuals, df = degfree,
-                            na.rm = na.rm)
+        tmp <- splitSplines(tmp, response, x=xname, INDICES = individuals, 
+                            df = degfree, correctBoundaries = correctBoundaries, 
+                            na.x.action = na.x.action, na.y.action = na.y.action)
     }
-    responses.df <- paste(responses, as.character(degfree), sep=".")
-    names(tmp)[match(responses, names(tmp))] <- responses.df
+    responses.df <- paste(responses.smooth, as.character(degfree), sep=".")
+    names(tmp)[match(responses.smooth, names(tmp))] <- responses.df
   }
   
   #Plot some combination of unsmoothed and smoothed response, AGR and RGR
   if (!("none" %in% plots))
   { 
     responses.tmp <- names(tmp)
-    if (any(c("responseComparison", "unsmoothed") %in% plots))
+    #Plot response
+    if (plotunsmooth & "response" %in% traits)
     { 
-      pltu <- longiPlot(data = tmp, x=x, response = response, 
+      pltu <- longiPlot(data = tmp, x=x, response = response, individuals = individuals, 
                         facet.x=facet.x, facet.y=facet.y, 
-                        title="Unsmoothed data", y.title = response, 
+                        title="Unsmoothed response", y.title = response, 
                         printPlot=FALSE, ...)
       if (!is.null(ggplotFuncs))
         for (f in ggplotFuncs)
           pltu <- pltu + f
-        if (!("responseComparison" %in% plots))
+        if (!("compare" %in% plots))
           print(pltu)
     }
-    if ("responseComparison" %in% plots)
+    if ("compare" %in% plots)
       for (r in paste(response.smooth, df, sep="."))
       { 
-        plt <- longiPlot(data = tmp, x=x, response = r, 
+        plt <- longiPlot(data = tmp, x=x, response = r, individuals = individuals, 
                          facet.x=facet.x, facet.y=facet.y, 
                          title="Smoothed response", y.title = r, 
                          printPlot=FALSE, ...)
@@ -968,47 +1311,108 @@ return(longi.prime.dat)
           print(plt, vp=viewport(layout.pos.row=1, layout.pos.col=2))
       }
     else
-      if ("smoothed" %in% plots)
-        for (r in paste(response.smooth, df, sep="."))
+      for (r in paste(response.smooth, df, sep="."))
+      { 
+        plt <- longiPlot(data = tmp, x=x, response = r, individuals = individuals, 
+                         facet.x=facet.x, facet.y=facet.y, 
+                         title="Smoothed response", y.title = r, 
+                         printPlot=FALSE, ...)
+        if (!is.null(ggplotFuncs))
+          for (f in ggplotFuncs)
+            plt <- plt + f
+          print(plt)
+      }
+    
+    #Plot AGRs
+    if ("AGR" %in% traits)
+    { 
+      if (plotunsmooth & "AGR" %in% traits)
+      { 
+        pltu <- longiPlot(data = tmp, x=x, response = paste(response,"AGR",sep="."), 
+                          individuals = individuals, facet.x=facet.x, facet.y=facet.y, 
+                          title="Unsmoothed AGR by difference", 
+                          y.title = paste(response,"AGR",sep="."), 
+                          printPlot=FALSE, ...)
+        if (!is.null(ggplotFuncs))
+          for (f in ggplotFuncs)
+            pltu <- pltu + f
+          if (!("compare" %in% plots))
+            print(pltu)
+      }
+      responses.plt <- paste(response.smooth, "AGR", df, sep=".")
+      if ("compare" %in% plots)
+        for (r in responses.plt)
         { 
-          plt <- longiPlot(data = tmp, x=x, response = r, 
+          plt <- longiPlot(data = tmp, x=x, response = r, individuals = individuals, 
                            facet.x=facet.x, facet.y=facet.y, 
-                           title="Smoothed response", y.title = r, 
+                           title="Smoothed AGR", y.title = r, 
                            printPlot=FALSE, ...)
+          if (!is.null(ggplotFuncs))
+            for (f in ggplotFuncs)
+              plt <- plt + f
+            grid.newpage()
+            pushViewport(viewport(layout = grid.layout(1, 2)))
+            print(pltu, vp=viewport(layout.pos.row=1, layout.pos.col=1))
+            print(plt, vp=viewport(layout.pos.row=1, layout.pos.col=2))
+        }
+      else
+        for (r in responses.plt)
+        { 
+          plt <- longiPlot(data = tmp, x=x, response = r, individuals = individuals, 
+                           facet.x=facet.x, facet.y=facet.y, 
+                           title=paste("Smoothed AGR by ", opt, sep=""), 
+                           y.title = r, printPlot=FALSE, ...)
           if (!is.null(ggplotFuncs))
             for (f in ggplotFuncs)
               plt <- plt + f
             print(plt)
         }
-    if ("AGR" %in% plots)
-    { 
-      responses.plt <- responses.tmp[grep("AGR", responses.tmp,fixed=T)]
-      for (r in responses.plt)
-      { 
-        plt <- longiPlot(data = tmp, x=x, response = r, 
-                         facet.x=facet.x, facet.y=facet.y, 
-                         title=paste("Growth rates by ", opt, sep=""), 
-                         y.title = r, printPlot=FALSE, ...)
-        if (!is.null(ggplotFuncs))
-          for (f in ggplotFuncs)
-            plt <- plt + f
-          print(plt)
-      }
     }
-    if ("RGR" %in% plots)
+    
+    #Plot RGR
+    if ("RGR" %in% traits)
     { 
-      responses.plt <- responses.tmp[grep("RGR", responses.tmp,fixed=T)]
-      for (r in responses.plt)
-      {
-        plt <- longiPlot(data = tmp, x=x, response = r, 
-                         facet.x=facet.x, facet.y=facet.y, 
-                         title=paste("Growth rates by ", opt, sep=""), 
-                         y.title = r, printPlot=FALSE, ...)
+      if (plotunsmooth & "RGR" %in% traits)
+      { 
+        pltu <- longiPlot(data = tmp, x=x, response = paste(response,"RGR",sep="."), 
+                          individuals = individuals, facet.x=facet.x, facet.y=facet.y, 
+                          title="Unsmoothed RGR by difference", 
+                          y.title = paste(response,"RGR",sep="."), 
+                          printPlot=FALSE, ...)
         if (!is.null(ggplotFuncs))
           for (f in ggplotFuncs)
-            plt <- plt + f
-          print(plt)
+            pltu <- pltu + f
+          if (!("compare" %in% plots))
+            print(pltu)
       }
+      responses.plt <- paste(response.smooth, "RGR", df, sep=".")
+      if ("compare" %in% plots)
+        for (r in responses.plt)
+        { 
+          plt <- longiPlot(data = tmp, x=x, response = r, individuals = individuals, 
+                           facet.x=facet.x, facet.y=facet.y, 
+                           title="Smoothed RGR", y.title = r, 
+                           printPlot=FALSE, ...)
+          if (!is.null(ggplotFuncs))
+            for (f in ggplotFuncs)
+              plt <- plt + f
+            grid.newpage()
+            pushViewport(viewport(layout = grid.layout(1, 2)))
+            print(pltu, vp=viewport(layout.pos.row=1, layout.pos.col=1))
+            print(plt, vp=viewport(layout.pos.row=1, layout.pos.col=2))
+        }
+      else
+        for (r in responses.plt)
+        { 
+          plt <- longiPlot(data = tmp, x=x, response = r, individuals = individuals, 
+                           facet.x=facet.x, facet.y=facet.y, 
+                           title=paste("Smoothed RGR by ", opt, sep=""), 
+                           y.title = r, printPlot=FALSE, ...)
+          if (!is.null(ggplotFuncs))
+            for (f in ggplotFuncs)
+              plt <- plt + f
+            print(plt)
+        }
     }
   }
   invisible(tmp)

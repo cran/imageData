@@ -3,20 +3,22 @@
 \title{Selects a set variables to be retained in a data frame of longitudinal data}
 \description{Forms the prime traits by selecting a subset of the traits in a data.frame of imaging data produced by the 
   Lemna Tec Scanalyzer. Add factors and explanatory variates that might be of use, including the maximum 
-  of the heigh SV1 and SV2 andf the mean of the two SV measurements for several traits.}
+  of the heigh SV1 and SV2 and the mean of the two SV measurements for several traits.}
 \usage{
-longitudinalPrime(data, idcolumns = c("Genotype.ID","Treatment.1"), 
-                  smarthouse.lev = c("SW"), 
+longitudinalPrime(data, cartId = "Snapshot.ID.Tag", 
+                  imageTimes = "Snapshot.Time.Stamp", 
+                  timeAfterStart = "Time.after.Planting..d.",
+                  idcolumns = c("Genotype.ID","Treatment.1"), 
+                  smarthouse.lev = NULL, 
                   calcWaterLoss = TRUE, pixelsPERcm = 18)}
 \arguments{
- \item{data}{A \code{\link{data.frame}} containing the columns specified in \code{idcolumns} 
+ \item{data}{A \code{\link{data.frame}} containing the columns specified by \code{cartId}, 
+             \code{imageTimes}, \code{timeAfterStart} and \code{idcolumns} 
              along with  the following columns: 
           
-            Snapshot.ID.Tag, Time.after.Planting..d., Smarthouse, Lane, Position, 
+            Smarthouse, Lane, Position, Weight.Before, Weight.After, Water.Amount, 
             
-            Snapshot.Time.Stamp, Weight.Before, 
-            
-            Weight.After, Water.Amount, Projected.Shoot.Area..pixels., Area.SV1, 
+            Projected.Shoot.Area..pixels., Area.SV1, 
             
             Boundary.Points.To.Area.Ratio.SV1, Caliper.Length.SV1, 
             
@@ -33,9 +35,19 @@ longitudinalPrime(data, idcolumns = c("Genotype.ID","Treatment.1"),
             Boundary.Points.To.Area.Ratio.TV,  Caliper.Length.TV, 
             
             Compactness.TV, Convex.Hull.Area.TV.}
- \item{idcolumns}{A \code{\link{character}} vector giving the names of the columns that identify the plants in a cart e.g. Genotype.ID, Treatment.1, Treatment.2.}
+ \item{cartId}{A \code{\link{character}} giving the name of the column that contains
+               the unique Id for each cart.}
+ \item{imageTimes}{A \code{\link{character}} giving the name of the column that contains
+               the time that each cart was imaged.}
+ \item{timeAfterStart}{A \code{\link{character}} giving the name of the column that 
+               contains the time after some nominated starting time e.g. the number of days 
+               after planting.}
+ \item{idcolumns}{A \code{\link{character}} vector giving the names of the columns that 
+                  identify differences between the plants or carts e.g. Genotype.ID, 
+                  Treatment.1, Treatment.2.}
  \item{smarthouse.lev}{A \code{\link{character}} vector giving the levels to use 
-            for the Smarthouse factor.}
+            for the Smarthouse factor. If \code{NULL} then the unique values in Smarthouse 
+            will be used.}
  \item{calcWaterLoss}{A \code{\link{logical}} indicating whether to calculate the Water.Loss. If it is \code{FALSE}, it is assumed that it is already in \code{data}.}
  \item{pixelsPERcm }{A \code{\link{numeric}} giving the number of pixels per cm 
            for the images.}
@@ -47,13 +59,13 @@ longitudinalPrime(data, idcolumns = c("Genotype.ID","Treatment.1"),
          \item Lane: factor for lane number in a smarthouse
          \item Position: factor for east/west position in a lane
          \item Days: factor for the number of Days After Planting (DAP)
-         \item Snapshot.ID.Tag: unique code for each cart 
+         \item \code{cartId}: unique code for each cart 
+         \item \code{imageTimes}: time at which an image was taken in POSIXct format
          \item Reps: factor indexing the replicates for each genotype (calculated)
-         \item Snapshot.Time.Stamp: time at which an image was taken in POSIXct format
          \item xPosn: numeric for the Positions within a Lane (calculated)
          \item Hour: hour of the day, to 2 decimal places, at which the image was taken (calculated)
          \item xDays: numeric for the DAP that is centred by subtracting the mean of the unique days (calculated)
-         \item idcolumns: the columns listed in \code{idcolumns} that have beeen converted to factors
+         \item \code{idcolumns}: the columns listed in \code{idcolumns} that have been converted to factors
          \item Weight.Before: weight of the pot before watering
          \item Weight.After: weight of the pot after watering
          \item Water.Amount: the weight of the water added (= Water.After - Water.Before)  (calculated)

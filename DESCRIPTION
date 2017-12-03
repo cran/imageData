@@ -1,6 +1,6 @@
 Package: imageData
-Version: 0.1-26
-Date: 2016-10-06
+Version: 0.1-41
+Date: 2017-12-03
 Title: Aids in Processing and Plotting Data from a Lemna-Tec
         Scananalyzer
 Author: Chris Brien <Chris.Brien@unisa.edu.au>.
@@ -8,6 +8,7 @@ Maintainer: Chris Brien <Chris.Brien@unisa.edu.au>
 Depends: R (>= 2.10.0)
 Imports: dae, ggplot2, stats, XLConnect, Hmisc, GGally, RColorBrewer,
         reshape, grid
+Suggests: testthat
 Description: Extracts traits from imaging data produced using a Lemna-Tec Scananalyzer 
     (see <http://www.lemnatec.com/products/hardware-solutions/scanalyzer-3d> for more 
     information). Growth rates between successive imagings are obtained and those for 
@@ -18,6 +19,6 @@ License: GPL (>= 2)
 URL: http://chris.brien.name
 RoxygenNote: 5.0.1
 NeedsCompilation: no
-Packaged: 2016-10-06 11:45:20 UTC; briencj
+Packaged: 2017-12-03 08:12:00 UTC; briencj
 Repository: CRAN
-Date/Publication: 2016-10-06 19:49:57
+Date/Publication: 2017-12-03 09:06:13 UTC

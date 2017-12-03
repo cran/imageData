@@ -40,9 +40,10 @@ splitContGRdiff(data, responses, INDICES,
                     \code{which.rates} are used.}
 }
 \value{A \code{\link{data.frame}} containing  \code{data} to which has been 
-       added a column for the differences between the \code{times.factor} and 
+       added a column for the differences between the \code{times.factor}, 
+       if it is not already in \code{data}, and 
        columns with growth rates. The name of the column for \code{times.factor} 
-       differnces will be the \code{times.factor} with \code{".diff"} appended and, 
+       differences will be the \code{times.factor} with \code{".diff"} appended and, 
        for each of the growth-rate columns will 
        be the value of \code{response} with one of \code{".AGR"}, \code{".PGR"} 
        or \code{"RGR"} or the corresponding value from \code{suffices.GR} 

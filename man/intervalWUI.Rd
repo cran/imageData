@@ -51,7 +51,7 @@ intervalWUI(responses, water.use = "Water.Use",
        \code{water.use}, \code{Total} and the suffix, each separated by a full
        stop(`.').}
 \details{
-The WUI it calculated as the difference between the values of a \code{response} 
+The WUI is calculated as the difference between the values of a \code{response} 
 at the \code{end.times}  and \code{start.times} divided by the sum of the water use  
 after \code{start.times} until \code{end.times}. Thus, the water use up to
 \code{start.times}  is not included.

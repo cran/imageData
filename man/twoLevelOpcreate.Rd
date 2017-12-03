@@ -3,7 +3,7 @@
 \title{Creates a data.frame formed by applying, for each response, a binary operation 
        to the paired values of two different treatments }
 \description{Takes pairs of values for a set of responses indexed by a two-level 
-             \code{treatment.factor} and and calculates, for each of pair, 
+             \code{treatment.factor} and calculates, for each of pair, 
              the result of applying a binary \code{operation} to their values 
              for the two levels of the \code{treatment.factor}. The level of the 
              \code{treatment.factor} designated the \code{control} will be 

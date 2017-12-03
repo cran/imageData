@@ -37,7 +37,7 @@ longiPlot(data, x = "xDays+44.5", response = "Area", individuals="Snapshot.ID.Ta
                values of a variable is required then use \code{colour.column}.}
  \item{colour.column}{A \code{\link{character}} giving the name of a column 
              in \code{data} over whose values the colours of the lines are to be 
-             varied. The colours can be specifed using \code{colour.values} .}
+             varied. The colours can be specified using \code{colour.values} .}
  \item{colour.values}{A \code{\link{character}} vector specifying the values of 
                the colours to use in drawing the lines for the profiles.  
                If this is a named vector, then the values will be matched based 
@@ -45,7 +45,7 @@ longiPlot(data, x = "xDays+44.5", response = "Area", individuals="Snapshot.ID.Ta
                (usually alphabetical) with the limits of the scale.}
  \item{alpha}{A \code{\link{numeric}} specifying the degrees of transparency to 
               be used in plotting. It is a ratio in which the denominator 
-              specires the number of points (or line) that must be overplotted 
+              specifies the number of points (or line) that must be overplotted 
               to give a solid cover.}
  \item{ggplotFuncs}{A \code{\link{list}}, each element of which contains the 
                 results of evaluating a \code{\link{ggplot}} function. 
@@ -61,12 +61,20 @@ longiPlot(data, x = "xDays+44.5", response = "Area", individuals="Snapshot.ID.Ta
 \examples{
 data(exampleData)
 longiPlot(data = longi.dat, response = "Area.smooth")
+
 plt <- longiPlot(data = longi.dat, response = "Area.smooth", x.title = "DAP",  
                  y.title = "Area.smooth", x="xDays+35.42857143", printPlot=FALSE)
 plt <- plt + ggplot2::geom_vline(xintercept=29, linetype="longdash", size=1) +
              ggplot2::scale_x_continuous(breaks=seq(28, 42, by=2)) + 
              ggplot2::scale_y_continuous(limits=c(0,750))
 print(plt)
+
+longiPlot(data = longi.dat, response = "Area.smooth", x.title = "DAP",  
+          y.title = "Area.smooth", x="xDays+35.42857143", 
+          ggplotFuncs = list(ggplot2::geom_vline(xintercept=29, linetype="longdash", 
+                                                 size=1), 
+                             ggplot2::scale_x_continuous(breaks=seq(28, 42, by=2)), 
+                             ggplot2::scale_y_continuous(limits=c(0,750))))
 }
 \keyword{hplot}
 

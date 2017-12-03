@@ -17,7 +17,7 @@ corrPlot(responses, data, show.sig = FALSE, title = NULL,
              \code{data} containing the variables to be correlated.}
  \item{data}{A \code{\link{data.frame}} containing the columns of variables to be correlated.}
  \item{show.sig}{A \code{\link{logical}} indicating whether or not to give asterisks indicating 
-                 significanc on the plot.}
+                 significance on the plot.}
  \item{title}{Title for the plot.}
  \item{pairs.sets}{A \code{\link{list}} each of whose components is a \code{\link{numeric}} giving 
                 the position of the variable names in \code{responses} that are to be included 
@@ -26,15 +26,15 @@ corrPlot(responses, data, show.sig = FALSE, title = NULL,
  \item{labelSize}{A \code{\link{numeric}} giving the size of the labels in the matrix plot.}
  \item{...}{allows passing of arguments to other functions}
 }
-\value{An object of class "\code{ggplot}", which can be plotted using \code{print}.}
+\value{\code{NULL}.}
 \author{Chris Brien}
 \seealso{\code{\link{ggplot}}.}
-\examples{
+\examples{\dontrun{
 data(exampleData)
 responses <- c("Area","Area.SV","Area.TV", "Image.Biomass", "Max.Height","Centre.Mass",
                "Density", "Compactness.TV", "Compactness.SV")
 corrPlot(responses, longi.dat, pairs.sets=list(c(1:4),c(5:7)))
 
-}
+}}
 \keyword{hplot}
 

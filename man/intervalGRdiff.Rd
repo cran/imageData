@@ -1,7 +1,7 @@
 \name{intervalGRdiff}
 \alias{intervalGRdiff}
 \title{Calculates the growth rates for a specified time interval}
-\description{Using the values of the reponses, calculates the specified 
+\description{Using the values of the responses, calculates the specified 
              combination of the Absolute Growth Rates 
              using differences (AGR), the Proportionate Growth Rates (PGR) 
              and Relative Growth Rates using log differences (RGR) between 
@@ -61,7 +61,7 @@ The PGR is calculated as the ratio of \code{response} at the \code{end.times}
 to that at \code{start.times} and the ratio raised to the power of the 
 reciprocal of the difference between \code{end.times}  and \code{start.times}. 
 The \code{RGR} is calculated as the \code{log} of the PGR and so is equal to 
-the difference between the lograrithms of \code{response} 
+the difference between the logarithms of \code{response} 
 at the \code{end.times}  and \code{start.times} divided by the difference 
 between \code{end.times}  and \code{start.times}.
 }

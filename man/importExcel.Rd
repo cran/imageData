@@ -8,14 +8,14 @@
   which by default is labelled \code{Snapshot.Time.Stamp}, containing 
   the time of imaging for each observation in a row of the sheet. Also, if 
   \code{startTime} is not \code{NULL}, \code{calcTimes} is called to 
-  calculate, or recaclulate if already present, \code{timeAfterStart} from 
+  calculate, or recalculate if already present, \code{timeAfterStart} from 
   \code{imageTimes} by subtracting a supplied \code{startTime}. 
   
   If the data is prefixed by 'RGB_SV1', 'RGB_SV2' or 'RGB_TV', 
   the 'RGB_' can be removed and the 'SV1', 'SV2' or 'TV' becomes a suffix. 
   }
 \usage{
-importExcel(file, sheet="raw data", 
+importExcel(file, sheet="raw data", sep = ",", 
             cartId = "Snapshot.ID.Tag", 
             imageTimes = "Snapshot.Time.Stamp", 
             timeAfterStart = "Time.after.Planting..d.", 
@@ -31,9 +31,10 @@ importExcel(file, sheet="raw data",
              which uniquely indexes the carts in the experiment, and 
              \code{imageTimes}, which reflects the time of the imaging from 
              which a particular data value was obtained. It is also assumed that a 
-             column whhose name is specified by \code{timeAfterStart} is in the sheet or that 
-             it will be calculated from \code{imagTimes} using the value of 
+             column whose name is specified by \code{timeAfterStart} is in the sheet or that 
+             it will be calculated from \code{imageTimes} using the value of 
              \code{startTime} supplied in the function call.}
+ \item{sep}{A \code{\link{character}} giving the separator used in a \code{csv} file.}
  \item{cartId}{A \code{\link{character}} giving the name of the column that contains
                the unique Id for each cart. Note that in importing data into R, spaces 
                and nonalphanumeric characters in names are converted to full stops.}
@@ -42,7 +43,7 @@ importExcel(file, sheet="raw data",
                and nonalphanumeric characters in names are converted to full stops.}
  \item{timeAfterStart}{A \code{\link{character}} giving the name of the column that 
                contains or is to contain the difference between \code{imageTimes} and 
-               \code{startTime}. The function \code{calcTimes} is called to caclulate the
+               \code{startTime}. The function \code{calcTimes} is called to calculate the
                differences. For example, it might contain the number of days after 
                planting. Note that in importing data into R, spaces 
                and nonalphanumeric characters in names are converted to full stops.}
@@ -58,7 +59,7 @@ importExcel(file, sheet="raw data",
  \item{imagetimesPlot}{A \code{logical} indicating whether a plot of the imaging times against 
              the recalculated \code{Time.After.Planting..d.}. It aids in checking 
              \code{Time.After.Planting..d.} and what occurred in imaging the plants.}
- \item{... }{allows for arguments to be pasesd to \code{\link{imagetimesPlot}}. However, if 
+ \item{... }{allows for arguments to be passed to \code{\link{imagetimesPlot}}. However, if 
              \code{intervals} is passed an error will occur; use timeAfterStart instead.}
 }
 \value{A \code{\link{data.frame}} containing the data.}

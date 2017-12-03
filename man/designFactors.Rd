@@ -23,7 +23,7 @@ designFactors(data, insertName = NULL, designfactorMethod = "LanePosition",
        \enumerate{
          \item Smarthouse: factor with levels for the Smarthouse
          \item Zones: factor dividing the Lanes into groups, usually of 4 lanes
-         \item xZones: numeric corresponding to Zones
+         \item xZones: numeric corresponding to Zones, centred by subtracting the mean of the unique positions
          \item SHZones: factor for the combinations of Smarthouse and Zones
          \item ZLane: factor for the lanes within a Zone
          \item ZMainplots: factor for the main plots within a Zone

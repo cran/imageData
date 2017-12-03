@@ -30,7 +30,7 @@ intervalValueCalculate(response, weights=NULL, individuals = "Snapshot.ID.Tag",
              instead of the value of the function itself.}
  \item{which.levels}{A \code{\link{character}} giving the name of the 
                      \code{\link{factor}} whose levels are to be identified as 
-                     as the level of the observation whose value matches the 
+                     the level of the observation whose value matches the 
                      value of the function.}
  \item{start.time}{A \code{\link{numeric}} giving the times, 
                    in terms of levels of \code{times.factor}, that will give a 
@@ -62,7 +62,7 @@ intervalValueCalculate(response, weights=NULL, individuals = "Snapshot.ID.Tag",
             using a \code{\link{character}} that occurs in a factor to delimit 
             levels when the levels of \code{individuals} are combined to 
             identify subsets.}
- \item{... }{allows for arguments to be pased to \code{FUN}.}
+ \item{... }{allows for arguments to be passed to \code{FUN}.}
 }
 \value{A \code{\link{data.frame}}, with the same number of rows as there are 
        \code{individuals}, containing a column for the \code{individuals}, 

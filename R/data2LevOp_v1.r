@@ -8,7 +8,8 @@
                                              "ZLane","ZMainplots","xMainPosn", 
                                              "Genotype.ID"),
                         by = c("Smarthouse","Zones","ZMainplots"))
-{ trt.lev <- levels(data[[treatment.factor]])
+{ 
+  trt.lev <- levels(data[[treatment.factor]])
   ntrt <- length(trt.lev)
   if (ntrt != 2)
     stop("The treatment factor must have only two levels")

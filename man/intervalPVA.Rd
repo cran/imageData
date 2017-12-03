@@ -2,7 +2,7 @@
 \alias{intervalPVA}
 \title{Selects a subset of variables observed within a specified time interval using Principal Variable Analysis (PVA)}
 \description{Principal Variable Analysis (PVA) (Cummings, 2007) selects a subset 
-  from a set of of the variables such that the variables in the subset are as 
+  from a set of the variables such that the variables in the subset are as 
   uncorrelated as possible, in an effort to ensure that all aspects of the variation 
   in the data are covered. Here, all observations in a specified time interval are 
   used for calculation the correlations on which the selection is based.}
@@ -42,7 +42,7 @@ intervalPVA(responses, data, times.factor = "Days", start.time, end.time,
        \code{h.partial}, \code{Added.Propn} and \code{Cumulative.Propn}.
 }
 \details{
-The variable that is most correlated with the other variables is selected first for inclusion. The partial correlation for each of the remining variables, given the first selected variable, is caluclated and the most correlated of these variables is selects for inclusion next. Then the partial correlations are adjust for the second included variables. This process is repeated until the specified criteria have been satisfied. The possibilites are to:
+The variable that is most correlated with the other variables is selected first for inclusion. The partial correlation for each of the remaining variables, given the first selected variable, is calculated and the most correlated of these variables is selects for inclusion next. Then the partial correlations are adjust for the second included variables. This process is repeated until the specified criteria have been satisfied. The possibilities are to:
 \enumerate{
   \item the default (\code{nvarselect = NULL} and \code{p.variance = 1}) select all variables in 
         increasing order of amount of information they provide;
@@ -54,8 +54,8 @@ The variable that is most correlated with the other variables is selected first 
 \author{Chris Brien}
 \seealso{\code{\link{PVA}}, \code{\link{rcontrib}}}
 \references{
-Cumming, J. A. and D. A. Wood (2007) Dimension reduction via principal variables. Computational Statistics
-and Data Analysis, 52, 550--565.
+Cumming, J. A. and D. A. Wood (2007) Dimension reduction via principal variables. \emph{Computational Statistics
+and Data Analysis}, \bold{52}, 550--565.
 }
 \examples{
 data(exampleData)
