@@ -15,12 +15,14 @@
 \usage{
 probeDF(data, response = "Area", xname="xDays", individuals="Snapshot.ID.Tag", 
         na.x.action="exclude", na.y.action = "exclude", 
-        df, correctBoundaries = FALSE, 
+        df, smoothing.scale = "identity", correctBoundaries = FALSE, 
         get.rates = TRUE, rates.method="differences", 
-        times.factor = "Days", x = NULL, 
-        facet.x = "Treatment.1", facet.y =   "Smarthouse", 
+        times.factor = "Days", x = NULL, x.title = NULL, 
+        facet.x = "Treatment.1", facet.y =   "Smarthouse", labeller = NULL, 
         which.traits = c("response", "AGR", "RGR"),
-        which.plots = "smoothedonly", ggplotFuncs = NULL, 
+        which.plots = "smoothedonly", 
+        deviations.boxplots = "none", 
+        ggplotFuncs = NULL, 
         ...)}
 \arguments{
  \item{data}{A \code{\link{data.frame}} containing the data.}
@@ -62,6 +64,10 @@ probeDF(data, response = "Area", xname="xDays", individuals="Snapshot.ID.Tag",
             values, respectively, are trimmed.}
  \item{df}{A \code{\link{numeric}} specifying the set of degrees of freedom to 
               be probed.}
+ \item{smoothing.scale}{A \code{\link{character}} giving the scale on which smoothing 
+      is to be performed. The two possibilites are \code{"identity"}, for directly 
+      smoothing the observed \code{response}, and \code{"logarithmic"}, for scaling the 
+      \code{log}-transformed \code{response}.}
  \item{correctBoundaries}{A \code{\link{logical}} indicating whether the fitted 
             spline values are to have the method of Huang (2001) applied 
             to them to correct for estimation bias at the end-points. Note that 
@@ -78,12 +84,16 @@ probeDF(data, response = "Area", xname="xDays", individuals="Snapshot.ID.Tag",
              should be numeric values stored as characters.}
  \item{x}{A \code{\link{character}} giving the variable to be plotted on the 
           x-axis. If \code{x} is \code{NULL} then \code{xname} is used.}
+ \item{x.title}{Title for the x-axis. If \code{NULL} then set to \code{times.factor}.}
  \item{facet.x}{A \code{\link{data.frame}} giving the variable to be used to 
                 form subsets to be plotted in separate columns of plots. 
                 Use \code{"."} if a split into columns is not wanted.}
  \item{facet.y}{A \code{\link{data.frame}} giving the variable to be used to 
                 form subsets to be plotted in separate rows of plots.
                 Use \code{"."} if a split into columns is not wanted.}
+ \item{labeller}{A \code{\link{ggplot}} \code{\link{function}} for labelling the 
+                 facets of a plot produced using the \code{\link{ggplot}} function. 
+                 For more information see \code{\link{ggplot}}.}
  \item{which.traits}{A \code{\link{character}} giving the traits that are to be 
              produced. One of more of \code{response}, \code{AGR} and \code{RGR}. 
              If \code{all}, all three traits are produced. The unsmoothed growth 
@@ -95,6 +105,11 @@ probeDF(data, response = "Area", xname="xDays", individuals="Snapshot.ID.Tag",
              produced for each trait. If \code{compare}, a combined plot of the 
              unsmoothed trait and the smoothed trait is produced for each value 
              of \code{df}.}
+ \item{deviations.boxplots}{A \code{\link{character}} specifying whether boxplots of 
+             the \code{absolute} and/or \code{relative} deviations of the values of a 
+             trait from  their smoothed values are to be produced. If \code{none}, 
+             no plots are produced. The argument \code{which.traits} controls 
+             the traits for which boxplots are produced.}
  \item{ggplotFuncs}{A \code{\link{list}}, each element of which contains the 
                 results of evaluating a \code{\link{ggplot}} function. 
                 It is created by calling the \code{\link{list}} function with 

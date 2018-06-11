@@ -11,15 +11,18 @@
   calculate, or recalculate if already present, \code{timeAfterStart} from 
   \code{imageTimes} by subtracting a supplied \code{startTime}. 
   
-  If the data is prefixed by 'RGB_SV1', 'RGB_SV2' or 'RGB_TV', 
-  the 'RGB_' can be removed and the 'SV1', 'SV2' or 'TV' becomes a suffix. 
+  Using \code{cameraType}, \code{keepCameraType}, \code{labsCamerasViews} and 
+  \code{prefix2suffix}, some flexibility is provided for renaming the columns with 
+  imaging data. For example, if the column names are prefixed with 'RGB_SV1', 'RGB_SV2' 
+  or 'RGB_TV', the 'RGB_' can be removed and the 'SV1', 'SV2' or 'TV' become suffices. 
   }
 \usage{
 importExcel(file, sheet="raw data", sep = ",", 
             cartId = "Snapshot.ID.Tag", 
             imageTimes = "Snapshot.Time.Stamp", 
             timeAfterStart = "Time.after.Planting..d.", 
-            prefix2suffix = TRUE, 
+            cameraType = "RGB", keepCameraType = FALSE, 
+            labsCamerasViews = NULL, prefix2suffix = TRUE, 
             startTime = NULL,
             timeFormat = "\%Y-\%m-\%d \%H:\%M", 
             imagetimesPlot = TRUE, ...)}
@@ -47,9 +50,30 @@ importExcel(file, sheet="raw data", sep = ",",
                differences. For example, it might contain the number of days after 
                planting. Note that in importing data into R, spaces 
                and nonalphanumeric characters in names are converted to full stops.}
- \item{prefix2suffix}{A \code{logical} specifying whether the variables names prefixed 
-             by "RGB_SV1", "RGB_SV2" or "RGB_TV" have these prefixes replaced by the 
-             suffices ".SV1", ".SV2" or ".TV", respectively.}
+ \item{cameraType}{A \code{\link{character}} string nominating the abbreviation used for the 
+               cameraType. A warning will be given if no variable names include this cameraType.}
+ \item{keepCameraType}{A \code{logical} specifying whether to retain the \code{cameraType} in the 
+             variables names. It will be the start of the prefix or suffix and separated from 
+             the remander of the prefix or suffix by an underscore (_).}
+ \item{labsCamerasViews}{A named \code{\link{character}} whose elements are new labels for the 
+               camera-view combinations and the name of each element is the old label for the 
+               camera-view combination in the data being imported. If \code{labsCamerasViews} 
+               is \code{NULL}, all column names beginning with \code{cameraType} are classed as 
+               imaging variables and the unique prefixes amongst them determined. If no imaging 
+               variables are found then no changes are made. Note that if you want to include a 
+               recognisable \code{cameraType} in a camier-view label, it should be at the start 
+               of the the label in \code{labsCamerasViews} and separated from the rest of the 
+               label by an underscore (_).}
+\item{prefix2suffix}{A \code{logical} specifying whether the variables names with prefixed 
+             camera-view labels are to have those prefixes transferred to become suffices. 
+             The prefix is assumed to be all the characters up to the first full stop (.) in the 
+             variable name and must contain \code{cameraType} to be moved. It is generally 
+             assumed that the characters up to the first underscore (_) are the camera type 
+             and this is removed if \code{keepCameraType} is \code{FALSE}. If there is no 
+             underscore (_), the whole prefix is moved. If \code{labsCamerasViews} is 
+             \code{NULL}, all column names beginning with \code{cameraType} are classed as 
+             imaging variables and the unique prefixes amongst them determined. 
+             If no imaging variables are found then no changes are made.}
  \item{startTime}{A \code{character} giving the time of planting, in the \code{POSIXct} 
        format timeFormat, to be subtracted from \code{imageTimes} 
        in recalculating \code{timeAfterStart}. If \code{startTime} is 
@@ -77,6 +101,16 @@ importExcel(file, sheet="raw data", sep = ",",
 \examples{\dontrun{
 raw.0169.dat <- importExcel(file = "0169 analysis_20140603.xlsx", 
                             startTime = "2013-05-23 8:00 AM")
+
+camview.labels <- c("SF0", "SL0", "SU0", "TV0")
+names(camview.labels) <- c("RGB_Side_Far_0", "RGB_Side_Lower_0", 
+                           "RGB_Side_Upper_0", "RGB_TV_0")
+raw.19.dat <- suppressWarnings(importExcel(file = "./data/raw19datarow.csv",
+                                           cartId = "Snapshot.ID.Tags",
+                                           startTime = "06/10/2017 0:00 AM",
+                                           timeFormat = "\%d/\%m/\%Y \%H:M", 
+                                           labsCamerasViews = camview.labels, 
+                                           imagetimesPlot = FALSE))
 }}
 \keyword{data}
 \keyword{manip}

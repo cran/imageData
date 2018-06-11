@@ -1,5 +1,45 @@
 \name{news}
 \title{News for Package imageData}
+\section{imageData Version 0.1-50 (2018-06-11)}{
+  \itemize{
+    \item{Test build under 3.6.0 with new version of ggplot2.}
+  }}
+\section{imageData Version 0.1-49 (2018-04-23)}{
+  \itemize{
+    \item{Added \code{smoothing.scale} argument to probeDF to allow logarithmic smoothing.}
+  }}
+\section{imageData Version 0.1-48 (2018-02-23)}{
+  \itemize{
+    \item{Added \code{smoothing.scale} argument to fitSpline and splitSplines to allow logarithmic smoothing. Added \code{AGR} argument so that the AGR could be calculated from the derivatives under logarithmic smoothing.}
+    \item{Fix bug in fitSpline and splitSplines in calculating derivatives of the smoothed spline.}
+    \item{Fix bugs related to directly using the default values of \code{cartId}, \code{imageTimes}, \code{timeAfterStart} and \code{idcolumns}. In particualr, \code{Reps} should no longer be just \code{NA} values.}
+  }}
+\section{imageData Version 0.1-47 (2018-02-16)}{
+  \itemize{
+    \item{Change both argument \code{cameraNames} in importExcel and \code{cameras} in longitudinalPrime to \code{labsCamerasViews} to better reflect their role.}
+    \item{Fix bugs related to directly using the default values of \code{cartId}, \code{imageTimes}, \code{timeAfterStart} and \code{idcolumns}. In particualr, \code{Reps} should no longer be just \code{NA} values.}
+  }}
+\section{imageData Version 0.1-46 (2018-02-15)}{
+  \itemize{
+    \item{Add \code{traits} and \code{cameras} to longitudinalPrime to allow greater control of of the imaging variables that are retained.}
+    \item{Fix bugs related to directly using the default values of \code{cartId}, \code{imageTimes}, \code{timeAfterStart} and \code{idcolumns}. In particualr, \code{Reps} should no longer be just \code{NA} values.}
+  }}
+\section{imageData Version 0.1-45 (2018-02-14)}{
+  \itemize{
+    \item{Add \code{cameraNames}, \code{keepCameraType} and \code{cameraType} to importExcel to allow greateer control of renaming of imaging variables.}
+  }}
+\section{imageData Version 0.1-44 (2018-01-29)}{
+  \itemize{
+    \item{Fix bug in probeDF relating to \code{deviations.boxplots}.}
+  }}
+\section{imageData Version 0.1-43 (2018-01-17)}{
+  \itemize{
+    \item{Fixed minor bugs in PVA.}
+  }}
+\section{imageData Version 0.1-42 (2017-12-29)}{
+  \itemize{
+    \item{Add \code{deviations.boxplots}, \code{x.title} and \code{labeller} arguments to probeDF.}
+  }}
 \section{imageData Version 0.1-41 (2017-12-03)}{
   \itemize{
     \item{Rebuild under R-3.5.0.}

@@ -8,10 +8,6 @@ test_that("Rice2015_imageData", {
   library(dae)
   library(ggplot2)
   library(imageData)
-  library(knitr)
-  opts_chunk$set("tidy" = FALSE, "dev" = "png", "dpi" = 300, 
-                 "fig.width" = 9, "fig.height" = 9)
-  
   
   ## A dummy example to illustrate the use of imageData
   #'# Step 1: Import the raw data
@@ -20,13 +16,14 @@ test_that("Rice2015_imageData", {
   raw.dat$Smarthouse <- 1
   
   #'# Step 2: Select imaging variables and add covariates and factors (produces longi.dat)
-  longi.prime.dat <- longitudinalPrime(data=raw.dat, smarthouse.lev=1)
+  longi.prime.dat <- longitudinalPrime(data=raw.dat, smarthouse.lev=1, 
+                                       idcolumns = c("Genotype.ID", "Treatment.1", "Treatment.2"))
   
   longi.dat <- designFactors(longi.prime.dat, insertName = "xDays",
                              nzones = 1, nlanesperzone = 1, nmainplotsperlane = 10, 
                              designfactorMethod="StandardOrder")
   testthat::expect_equal(nrow(longi.dat), 280)
-  testthat::expect_equal(ncol(longi.dat), 52)
+  testthat::expect_equal(ncol(longi.dat), 44)
   
   
   #'## Plot the imaging times for 20 carts from a single Lane
@@ -51,7 +48,7 @@ test_that("Rice2015_imageData", {
                                INDICES="Snapshot.ID.Tag",
                                which.rates = c("AGR","RGR"))
   testthat::expect_equal(nrow(longi.dat), 280)
-  testthat::expect_equal(ncol(longi.dat), 56)
+  testthat::expect_equal(ncol(longi.dat), 48)
   
   #'## Form Area.WUE 
   longi.dat <- within(longi.dat, 
@@ -67,7 +64,7 @@ test_that("Rice2015_imageData", {
                         WUE.cum <- Area / Water.Loss.Cum 
                       })
   testthat::expect_equal(nrow(longi.dat), 280)
-  testthat::expect_equal(ncol(longi.dat), 59)
+  testthat::expect_equal(ncol(longi.dat), 51)
   
   #'# Step 4: Fit splines to smooth the longitudinal trends in the primary traits and calculate their growth rates
   #'
@@ -78,7 +75,7 @@ test_that("Rice2015_imageData", {
                               df = 4)
   longi.dat <- with(longi.dat, longi.dat[order(Snapshot.ID.Tag, xDays), ])
   testthat::expect_equal(nrow(longi.dat), 280)
-  testthat::expect_equal(ncol(longi.dat), 61)
+  testthat::expect_equal(ncol(longi.dat), 53)
   
   #'## Loop over smoothed responses, forming growth rates by differences
   #+
@@ -87,7 +84,7 @@ test_that("Rice2015_imageData", {
                                INDICES="Snapshot.ID.Tag",
                                which.rates = c("AGR","RGR"))
   testthat::expect_equal(nrow(longi.dat), 280)
-  testthat::expect_equal(ncol(longi.dat), 63)
+  testthat::expect_equal(ncol(longi.dat), 55)
   
   #'## Finalize longi.dat
   longi.dat <- with(longi.dat, longi.dat[order(Snapshot.ID.Tag, xDays), ])

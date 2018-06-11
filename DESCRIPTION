@@ -1,11 +1,11 @@
 Package: imageData
-Version: 0.1-41
-Date: 2017-12-03
+Version: 0.1-50
+Date: 2018-06-11
 Title: Aids in Processing and Plotting Data from a Lemna-Tec
         Scananalyzer
 Author: Chris Brien <Chris.Brien@unisa.edu.au>.
 Maintainer: Chris Brien <Chris.Brien@unisa.edu.au>
-Depends: R (>= 2.10.0)
+Depends: R (>= 3.5.0)
 Imports: dae, ggplot2, stats, XLConnect, Hmisc, GGally, RColorBrewer,
         reshape, grid
 Suggests: testthat
@@ -19,6 +19,6 @@ License: GPL (>= 2)
 URL: http://chris.brien.name
 RoxygenNote: 5.0.1
 NeedsCompilation: no
-Packaged: 2017-12-03 08:12:00 UTC; briencj
+Packaged: 2018-06-11 05:59:39 UTC; briencj
 Repository: CRAN
-Date/Publication: 2017-12-03 09:06:13 UTC
+Date/Publication: 2018-06-11 13:25:44 UTC

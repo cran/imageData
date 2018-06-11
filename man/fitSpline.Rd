@@ -23,8 +23,9 @@
        controlled via \code{na.x.action} and \code{na.y.action}.
 }
 \usage{
-fitSpline(data, response, x, df=NULL, correctBoundaries = FALSE, 
-          deriv=NULL, suffices.deriv=NULL, RGR=NULL, 
+fitSpline(data, response, x, df=NULL, smoothing.scale = "identity", 
+          correctBoundaries = FALSE, 
+          deriv=NULL, suffices.deriv=NULL, RGR=NULL, AGR=NULL, 
           na.x.action="exclude", na.y.action = "exclude", ...)}
 \arguments{
  \item{data}{A \code{\link{data.frame}} containing the column to be smoothed.}
@@ -37,6 +38,10 @@ fitSpline(data, response, x, df=NULL, correctBoundaries = FALSE,
       result in more smoothing. If \code{df = NULL}, the amount of smoothing 
       is controlled by the default arguments for and those that you supply to 
       \code{smooth.spline}.}
+ \item{smoothing.scale}{A \code{\link{character}} giving the scale on which smoothing 
+      is to be performed. The two possibilites are \code{"identity"}, for directly 
+      smoothing the observed \code{response}, and \code{"logarithmic"}, for scaling the 
+      \code{log}-transformed \code{response}.}
  \item{correctBoundaries}{A \code{\link{logical}} indicating whether the fitted spline 
             values are to have the method of Huang (2001) applied 
             to them to correct for estimation bias at the end-points. Note that 
@@ -47,10 +52,28 @@ fitSpline(data, response, x, df=NULL, correctBoundaries = FALSE,
  \item{suffices.deriv}{A \code{\link{character}} giving the characters to be 
                        appended to the names of the derivatives.}
  \item{RGR}{A \code{\link{character}} giving the character to be appended 
-            to the name of the RGR. If \code{RGR} is not \code{NULL}, 
+            to the smoothed \code{response} to create the RGR name, 
+            but only when \code{smoothing.scale} is \code{identity}. 
+            When \code{smoothing.scale} is \code{identity}: 
+            (i) if \code{RGR} is not \code{NULL}  
             \code{deriv} must include 1 so that the first derivative is 
-            available for calculating the RGR. If \code{RGR} is \code{NULL}, 
-            the RGR is not calculated.}
+            available for calculating the RGR; (ii) if \code{RGR} is \code{NULL}, 
+            the RGR is not calculated from the AGR. 
+            When \code{smoothing.scale} is \code{logarithmic}, 
+            the RGR is the backtransformed first derivative and so, to obtain it, merely 
+            include \code{1} in \code{deriv} and any suffix for it in 
+            \code{suffices.deriv}.}
+ \item{AGR}{A \code{\link{character}} giving the character to be appended 
+            to the smoothed \code{response} to create the AGR name, 
+            but only when \code{smoothing.scale} is \code{logarithmic}. 
+            When \code{smoothing.scale} is \code{logarithmic}: (i) 
+            if \code{AGR} is not \code{NULL}, 
+            \code{deriv} must include 1 so that the first derivative is 
+            available for calculating the AGR; (ii) If \code{AGR} is \code{NULL}, 
+            the AGR is not calculated from the RGR. When \code{smoothing.scale} is \code{identity}, 
+            the AGR is the first derivative and so, to obtain it, merely 
+            include \code{1} in \code{deriv} and any suffix for it in 
+            \code{suffices.deriv}.}
  \item{na.x.action}{A \code{\link{character}} string that specifies the action to 
             be taken when values of \code{x} are \code{NA}. The possible 
             values are \code{fail}, \code{exclude} or \code{omit}. 

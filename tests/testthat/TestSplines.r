@@ -1,17 +1,16 @@
 
-cat("#### Test fitSpline with leaf data when there are m issing values\n")
+cat("#### Test fitSpline with leaf data when there are missing values\n")
 test_that("leaf_imageData", {
   skip_if_not_installed("imageData")
   skip_on_cran()
   library(dae)
   library(ggplot2)
   library(imageData)
-  library(knitr)
   opts_chunk$set("tidy" = FALSE, "dev" = "png", "dpi" = 300, 
                  "fig.width" = 9, "fig.height" = 9)
   
   
-  # A small subset of Exp 270 leaaf tracking data
+  # A small subset of Exp 270 leaf tracking data
   data(testSpline)
   responses <- names(test)[5:ncol(test)]
   
@@ -197,6 +196,63 @@ test_that("leaf_imageData", {
 })
   
 
+cat("#### Test fitSpline with leaf data for log-smoothing\n")
+test_that("leaf_imageData", {
+  skip_if_not_installed("imageData")
+  skip_on_cran()
+  library(dae)
+  library(ggplot2)
+  library(imageData)
+  opts_chunk$set("tidy" = FALSE, "dev" = "png", "dpi" = 300, 
+                 "fig.width" = 9, "fig.height" = 9)
+  
+  
+  # A small subset of Exp 270 leaf tracking data
+  data(testSpline)
+
+  ##Smooth splines using identity and logarithm transformations - exclude y
+  leaf.dat <- test
+  leaf.dat$Area.log <- log(leaf.dat$Area)
+  #Investigate AGR and RGR calculations
+  leaf.dat <- splitSplines(leaf.dat, response="Area", x="xDays", 
+                           INDICES = "Snapshot.ID.Tag", 
+                           df = 4, smoothing.scale = "log",
+                           deriv=1, suffices.deriv="RGRdv", AGR="AGRdv")
+  names(leaf.dat)[(match(c("Area.smooth", "Area.smooth.AGRdv","Area.smooth.RGRdv"), 
+                         names(leaf.dat)))] <- paste(c("Area.smooth", "Area.smooth.AGRdv",
+                                                       "Area.smooth.RGRdv"), "log", sep = ".")
+  testthat::expect_equal(sum(is.na(leaf.dat$Area.smooth.log)), 3)
+  testthat::expect_false(any(abs(leaf.dat$Area.smooth.AGRdv.log[1:3] - 
+                                   c(2.993617, 3.682534, 4.568932)) > 1e-03, 
+                             na.rm = TRUE))
+  testthat::expect_false(any(abs(leaf.dat$Area.smooth.RGRdv.log[1:3] - 
+                                   c(0.1878992, 0.1913271, 0.1955440)) > 1e-03, 
+                             na.rm = TRUE))
+  #Manual calculation of log smooth
+  leaf.dat <- splitSplines(leaf.dat, response = "Area.log", x="xDays", 
+                           INDICES = "Snapshot.ID.Tag", 
+                           df = 4)
+  leaf.dat$Area.log.smooth <- exp(leaf.dat$Area.log.smooth)
+  testthat::expect_false(any(abs(leaf.dat$Area.log.smooth - leaf.dat$Area.smooth.log) > 0.1, 
+                            na.rm = TRUE))
+  testthat::expect_equal(sum(is.na(leaf.dat$Area.log.smooth)), 3)
+
+  #identity smoothing scale calculation of AGR and RGR
+  leaf.dat <- splitSplines(leaf.dat, response="Area", x="xDays", 
+                           INDICES = "Snapshot.ID.Tag", 
+                           df = 4, deriv=1, suffices.deriv="AGRdv", RGR="RGRdv")
+  testthat::expect_false(any(abs(leaf.dat$Area.smooth[1:3] - 
+                                   c(14.48536, 18.89667, 23.69953)) > 1e-03, 
+                             na.rm = TRUE))
+  testthat::expect_false(any(abs(leaf.dat$Area.smooth.AGRdv[1:3] - 
+                                   c(4.341943, 4.550298, 5.099377)) > 1e-03, 
+                             na.rm = TRUE))
+  testthat::expect_false(any(abs(leaf.dat$Area.smooth.RGRdv[1:3] - 
+                                   c(0.2997469, 0.2407990, 0.2151678)) > 1e-03, 
+                             na.rm = TRUE))
+})
+
+
 
 cat("#### Test correctBoundaries in fitSpline using a single plant from Rice germplasm\n")
 test_that("area_correctBoundaries", {
@@ -205,7 +261,6 @@ test_that("area_correctBoundaries", {
   library(dae)
   library(ggplot2)
   library(imageData)
-  library(knitr)
   opts_chunk$set("tidy" = FALSE, "dev" = "png", "dpi" = 300, 
                  "fig.width" = 9, "fig.height" = 9)
   data(area.dat)

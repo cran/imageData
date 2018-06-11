@@ -17,8 +17,9 @@ of a response to a \code{data.frame}}
        observations is controlled via \code{na.x.action} and \code{na.y.action}.
 }
 \usage{
-splitSplines(data, response, x, INDICES, df = NULL, correctBoundaries = FALSE, 
-             deriv = NULL, suffices.deriv=NULL, RGR=NULL, sep=".", 
+splitSplines(data, response, x, INDICES, df = NULL, smoothing.scale = "identity", 
+             correctBoundaries = FALSE, 
+             deriv = NULL, suffices.deriv=NULL, RGR=NULL, AGR=NULL, sep=".", 
              na.x.action="exclude", na.y.action = "exclude", ...)}
 \arguments{
  \item{data}{A \code{\link{data.frame}} containing the column to be smoothed.}
@@ -36,6 +37,10 @@ splitSplines(data, response, x, INDICES, df = NULL, correctBoundaries = FALSE,
       of freedom of the smooth (trace of the smoother matrix). Lower values 
       result in more smoothing. If \code{df = NULL}, ordinary leave-one-out 
       cross-validation is used to determine the amount of smooth.}
+ \item{smoothing.scale}{A \code{\link{character}} giving the scale on which smoothing 
+      is to be performed. The two possibilites are \code{"identity"}, for directly 
+      smoothing the observed \code{response}, and \code{"logarithmic"}, for scaling the 
+      \code{log}-transformed \code{response}.}
  \item{correctBoundaries}{A \code{\link{logical}} indicating whether the fitted 
             spline values are to have the method of Huang (2001) applied 
             to them to correct for estimation bias at the end-points. Note that 
@@ -46,10 +51,28 @@ splitSplines(data, response, x, INDICES, df = NULL, correctBoundaries = FALSE,
  \item{suffices.deriv}{A \code{\link{character}} giving the characters to be 
                        appended to the names of the derivatives.}
  \item{RGR}{A \code{\link{character}} giving the character to be appended 
-            to the name of the RGR. If \code{RGR} is not \code{NULL}, 
+            to the smoothed \code{response} to create the RGR name, 
+            but only when \code{smoothing.scale} is \code{identity}. 
+            When \code{smoothing.scale} is \code{identity}: 
+            (i) if \code{RGR} is not \code{NULL}  
             \code{deriv} must include 1 so that the first derivative is 
-            available for calculating the RGR. If \code{RGR} is \code{NULL}, 
-            the RGR is not calculated.}
+            available for calculating the RGR; (ii) if \code{RGR} is \code{NULL}, 
+            the RGR is not calculated from the AGR. 
+            When \code{smoothing.scale} is \code{logarithmic}, 
+            the RGR is the backtransformed first derivative and so, to obtain it, merely 
+            include \code{1} in \code{deriv} and any suffix for it in 
+            \code{suffices.deriv}.}
+ \item{AGR}{A \code{\link{character}} giving the character to be appended 
+            to the smoothed \code{response} to create the AGR name, 
+            but only when \code{smoothing.scale} is \code{logarithmic}. 
+            When \code{smoothing.scale} is \code{logarithmic}: (i) 
+            if \code{AGR} is not \code{NULL}, 
+            \code{deriv} must include 1 so that the first derivative is 
+            available for calculating the AGR; (ii) If \code{AGR} is \code{NULL}, 
+            the AGR is not calculated from the RGR. When \code{smoothing.scale} is \code{identity}, 
+            the AGR is the first derivative and so, to obtain it, merely 
+            include \code{1} in \code{deriv} and any suffix for it in 
+            \code{suffices.deriv}.}
  \item{sep}{A \code{\link{character}} giving the separator to use when the 
             levels of \code{INDICES} are combined. This is needed to avoid 
             using a \code{\link{character}} that occurs in a factor to delimit 

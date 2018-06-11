@@ -14,10 +14,10 @@ globalVariables(c("Snapshot.ID.Tag", "Snapshot.Time.Stamp", "Time.after.Planting
 #Function to move camera prefix to a suffix without the characters up to the first _ (eg RBG_) 
 #If no _ then moves whole prefix.
 #Assumes that prefix ends at first full.stop
-"pre2suffix" <- function(name, cameraNames, keepCameraType)
+"pre2suffix" <- function(name, labsCamerasViews, keepCameraType)
 { 
   prefix <- (strsplit(name, ".", fixed=TRUE))[[1]][1]
-  if (any(cameraNames %in% prefix))
+  if (any(labsCamerasViews %in% prefix))
   { 
     if (grepl("_", prefix) && !keepCameraType)
     {
@@ -38,8 +38,8 @@ globalVariables(c("Snapshot.ID.Tag", "Snapshot.Time.Stamp", "Time.after.Planting
 "importExcel" <- function(file, sheet="raw data", sep = ",", cartId = "Snapshot.ID.Tag", 
                           imageTimes = "Snapshot.Time.Stamp", 
                           timeAfterStart = "Time.after.Planting..d.", 
-                          cameraNames = NULL, cameraType = "RGB", 
-                          prefix2suffix = TRUE, keepCameraType = FALSE, 
+                          cameraType = "RGB", keepCameraType = FALSE, 
+                          labsCamerasViews = NULL, prefix2suffix = TRUE, 
                           startTime = NULL, timeFormat = "%Y-%m-%d %H:%M", 
                           imagetimesPlot = TRUE, ...)
 { 
@@ -71,30 +71,30 @@ globalVariables(c("Snapshot.ID.Tag", "Snapshot.Time.Stamp", "Time.after.Planting
   
 
   #Rename image columns 
-  #Change cameraNames as sprecified by camera names
+  #Change cameras and views as specified by labsCamerasViews
   vars <- names(raw.dat)
-  if (!is.null(names(cameraNames)))
+  if (!is.null(names(labsCamerasViews)))
   {
-    old.names <- names(cameraNames)
+    old.names <- names(labsCamerasViews)
     for (old in old.names)
-      vars <- gsub(old, cameraNames[old], vars, fixed = TRUE)
+      vars <- gsub(old, labsCamerasViews[old], vars, fixed = TRUE)
     names(raw.dat) <- vars
   } else #find
   {
-    cameraNames <- vars[grep(cameraType, vars, fixed = TRUE)]
-    if (length(cameraNames) == 0)
+    labsCamerasViews <- vars[grep(cameraType, vars, fixed = TRUE)]
+    if (length(labsCamerasViews) == 0)
       warning(paste("No imaging variables for a camera of type ", cameraType, " found", sep=""))
-    cameraNames <- strsplit(cameraNames, ".", fixed=TRUE)
-    cameraNames <- unique(unlist(lapply(cameraNames, 
+    labsCamerasViews <- strsplit(labsCamerasViews, ".", fixed=TRUE)
+    labsCamerasViews <- unique(unlist(lapply(labsCamerasViews, 
                                         function(name) {return(name[[1]][1])})))
-    names(cameraNames) <- cameraNames
+    names(labsCamerasViews) <- labsCamerasViews
   }
   
   #Move prefix for camera View to become a suffix without the RGB_
   if (prefix2suffix)
   { 
     newvars <- sapply(vars[1:length(vars)], pre2suffix, 
-                      cameraNames = cameraNames, keepCameraType = keepCameraType)
+                      labsCamerasViews = labsCamerasViews, keepCameraType = keepCameraType)
     names(newvars) <- NULL
     names(raw.dat)[match(vars, names(raw.dat))] <- newvars
   } else
@@ -137,72 +137,97 @@ globalVariables(c("Snapshot.ID.Tag", "Snapshot.Time.Stamp", "Time.after.Planting
                                 imageTimes = "Snapshot.Time.Stamp", 
                                 timeAfterStart = "Time.after.Planting..d.", 
                                 idcolumns = c("Genotype.ID","Treatment.1"),
-                                traits = NULL,
-                                cameras = NULL, 
+                                traits = list(all = c("Area", "Boundary.Points.To.Area.Ratio", 
+                                                      "Caliper.Length", "Compactness", 
+                                                      "Convex.Hull.Area"), 
+                                              side = c("Center.Of.Mass.Y", 
+                                                       "Max.Dist.Above.Horizon.Line")),
+                                labsCamerasViews = list(all = c("SV1", "SV2", "TV"),
+                                                      side = c("SV1", "SV2")), 
                                 smarthouse.lev = NULL, 
-                                calcWaterLoss = TRUE, pixelsPERcm = 1)
+                                calcWaterLoss = TRUE, pixelsPERcm)
 { 
   #Extract variables from data to form data frame of longitudinal data
   posndatevars <- c(cartId,timeAfterStart,
                     "Smarthouse","Lane","Position",imageTimes)
-  if (is.null(traits))
-    traits <- list(all = c("Area", "Boundary.Points.To.Area.Ratio", "Caliper.Length",
-                           "Compactness", "Convex.Hull.Area"), 
-                   side = c("Center.Of.Mass.Y", "Max.Dist.Above.Horizon.Line"))
-  if (is.null(cameras))
-    cameras <- list(all = c("SV1", "SV2", "TV"),
-                    side = c("SV1", "SV2"))
-  if (length(cameras) == 0)
-    imagevars <- unlist(traits)
+  imagevars <- NULL
+  if (is.list(traits) && !is.null(traits))
+  {
+    if (is.null(labsCamerasViews))
+      imagevars <- unlist(traits)
+    else
+    {
+      if (!is.list(labsCamerasViews) || length(traits) != length(labsCamerasViews))
+        stop(paste0("When traits is a list then labsCamerasViews must also be a list ",
+                    "with the same number of components as traits"))
+      if (length(labsCamerasViews) == 1)
+        imagevars <- as.vector(outer(traits[[1]], labsCamerasViews[[1]], paste, sep = "."))
+      else
+        imagevars <- unlist(mapply(FUN =  function(traits, names) {
+          if (is.null(names))
+             t <- traits
+          else
+            t <- as.vector(t(outer(traits, names, paste, sep = ".")))
+          invisible(t)
+        }, 
+        traits, labsCamerasViews))
+      names(imagevars) <- NULL
+    }
+  } else
+  {
+    if (is.character(traits))
+    {
+      if (is.null(labsCamerasViews))
+        imagevars <- unlist(traits)
+      else
+        imagevars <- as.vector(outer(traits, labsCamerasViews, paste, sep = "."))
+    } else
+      stop("traits is neither a list nor a character")
+  }
+  if (calcWaterLoss)
+    vars <- c(posndatevars, idcolumns, "Weight.Before","Weight.After","Water.Amount",
+              "Projected.Shoot.Area..pixels.", imagevars)
   else
-    imagevars <- unlist(mapply(FUN =  function(traits, names) {
-                                        as.vector(t(outer(traits, names, paste, sep = ".")))
-                                      }, 
-                               traits, cameras))
-  names(imagevars) <- NULL
-  imagevars <- c("Weight.Before","Weight.After","Water.Amount",
-                 "Projected.Shoot.Area..pixels.", imagevars)
-  vars <- c(posndatevars, idcolumns, imagevars)
-  
+    vars <- c(posndatevars, idcolumns, "Projected.Shoot.Area..pixels.", imagevars)
+
   #Check that vars are in data
   if (!all(vars %in% names(data)))
-  { 
     stop(paste("The following variables are not present in data:  ",
                paste(vars[!(vars %in% names(data))], collapse = ", "), sep = ""))
-  }
-  
+
   longi.prime.dat <- data[, vars]
 
   #Add factors and variates needed in the analysis
   longi.prime.dat <- longi.prime.dat[do.call(order, longi.prime.dat), ]
   if (is.null(smarthouse.lev))
     smarthouse.lev <- unique(longi.prime.dat$Smarthouse)
+  longi.prime.dat$Days <- as.numeric(longi.prime.dat[[timeAfterStart]])
   longi.prime.dat <- within(longi.prime.dat, 
                             { 
                               Smarthouse <- factor(Smarthouse, levels=smarthouse.lev)
-                              Days <- as.numeric(Time.after.Planting..d.)
                               xDays <- Days - mean(unique(Days))
                               xPosn <- Position - mean(unique(Position))
+                              Position <- factor(Position, levels=sort(unique(Position)))
                               Area <- Projected.Shoot.Area..pixels./1000
                             })
 
-  longi.prime.dat <- within(longi.prime.dat, {Position <- factor(Position, levels=sort(unique(Position)))}) 
   facs <- c("Lane", idcolumns, "Days")
   longi.prime.dat[facs] <- as.data.frame(lapply(longi.prime.dat[facs], FUN = factor))
   
 
 #Now derive a Reps factor 
 #+
-if (all(c("Genotype.ID","Treatment.1") %in% posndatevars))
+if (all(idcolumns %in% vars))
 {
   longi.prime.dat <- within(longi.prime.dat, 
                             { 
                               Reps <- 1
-                              trts <- fac.combine(list(Genotype.ID,Treatment.1))
+                              trts <- fac.combine(as.list(longi.prime.dat[idcolumns]))
                             })
   for (t in levels(longi.prime.dat$trts))
-  { which.indiv <- with(longi.prime.dat, 
-                        sort(unique(longi.prime.dat[trts==t, "Snapshot.ID.Tag"])))
+  { 
+    which.indiv <- with(longi.prime.dat, 
+                        sort(unique(longi.prime.dat[trts==t, cartId])))
   for (k in 1:length(which.indiv))
     longi.prime.dat[longi.prime.dat$trts == t & 
                       longi.prime.dat$Snapshot.ID.Tag == which.indiv[k], "Reps"] <- k
@@ -211,61 +236,35 @@ if (all(c("Genotype.ID","Treatment.1") %in% posndatevars))
 } else 
   longi.prime.dat$Reps <- NA
 
-#Form responses that can be calculated by row-wise  operations: 
-longi.prime.dat <- calcTimes(longi.prime.dat, imageTimes = "Snapshot.Time.Stamp",
-                              timePositions = "Hour")
-longi.prime.dat <- within(longi.prime.dat, 
-                          { 
-                            Area.SV <- (Area.SV1 + Area.SV2)/1000/2
-                            Area.TV <- Area.TV/1000
-                            Image.Biomass <- Area.SV* sqrt(Area.TV)
-                            Centre.Mass <- ((2157 - Center.Of.Mass.Y.SV1) + 
-                                              (2157 - Center.Of.Mass.Y.SV2))/pixelsPERcm/2
-                            Convex.Hull.SV <- (Convex.Hull.Area.SV1 + Convex.Hull.Area.SV1)/1000/2
-                            Convex.Hull.TV <- Convex.Hull.Area.TV/1000
-                            Compactness.SV <- Area.SV / Convex.Hull.SV
-                            Max.Height <- pmax(Max.Dist.Above.Horizon.Line.SV1, 
-                                               Max.Dist.Above.Horizon.Line.SV2)/pixelsPERcm
-                            Density <- Area/Max.Height
-                            Density <- ifelse(is.infinite(Density), NA, Density)
-                            Volume <- Convex.Hull.TV*Max.Height
-                          })
-
-out.posndatevars <- c("Smarthouse","Lane","Position","Days",
-                      cartId,imageTimes,"xPosn", "Reps", "Hour", "xDays")
-out.imagevars <- c("Weight.Before","Weight.After","Water.Amount", "Water.Loss", 
-                   "Area", "Area.SV", "Area.TV", 
-                   "Area.SV1", "Area.SV2", "Image.Biomass", 
-                   "Max.Height", "Max.Dist.Above.Horizon.Line.SV1", 
-                   "Max.Dist.Above.Horizon.Line.SV2", 
-                   "Density", "Volume", "Centre.Mass", 
-                   "Center.Of.Mass.Y.SV1", "Center.Of.Mass.Y.SV2", 
-                   "Convex.Hull.SV", "Convex.Hull.TV", "Convex.Hull.Area.TV",
-                   "Convex.Hull.Area.SV1", "Convex.Hull.Area.SV2", 
-                   "Boundary.Points.To.Area.Ratio.SV1", 
-                   "Boundary.Points.To.Area.Ratio.SV2", 
-                   "Boundary.Points.To.Area.Ratio.TV",  
-                   "Compactness.SV1", "Compactness.SV2", 
-                   "Compactness.SV", "Compactness.TV", 
-                   "Caliper.Length.SV1", "Caliper.Length.SV2", 
-                   "Caliper.Length.TV")
-out.vars <- c(out.posndatevars, idcolumns, out.imagevars)
-
-#'## Calculate Water Use
-#+
-if (calcWaterLoss)
-  longi.prime.dat <- within(longi.prime.dat, 
-                            { Water.Loss <-   unlist(by(Weight.After, list(Snapshot.ID.Tag), 
+  #Form responses that can be calculated by row-wise  operations: 
+  longi.prime.dat <- calcTimes(longi.prime.dat, imageTimes = imageTimes,
+                               timePositions = "Hour")
+  kpx.vars <- imagevars[c(grep("Area.", imagevars, fixed = TRUE), 
+                          grep("Convex.Hull.Circumference", imagevars, fixed = TRUE))]
+  kpx.vars <- kpx.vars[!grepl("Ratio", kpx.vars, fixed = TRUE)]
+  longi.prime.dat[kpx.vars] <- longi.prime.dat[kpx.vars]/1000
+  
+  #'## Calculate Water Use
+  #+
+  if (calcWaterLoss)
+    longi.prime.dat <- within(longi.prime.dat, 
+                              { 
+                                Water.Loss <- unlist(by(Weight.After, list(Snapshot.ID.Tag), 
                                                         FUN=calcLagged)) - Weight.Before
-                            })
-else
-  out.vars <- out.vars[-(match("Water.Loss",out.vars))]  
+                              })
 
-
-#Re-order rows and response columns
-longi.prime.dat <- with(longi.prime.dat, longi.prime.dat[order(Snapshot.ID.Tag, Time.after.Planting..d.), ])
-longi.prime.dat <- longi.prime.dat[out.vars]
-return(longi.prime.dat)
+  
+  out.posndatevars <- c("Smarthouse","Lane","Position","Days",
+                        cartId, imageTimes,"xPosn", "Reps", "Hour", "xDays")
+  imagevars <- c("Area", imagevars)
+  if (calcWaterLoss)
+    imagevars <- c("Weight.Before","Weight.After","Water.Amount", "Water.Loss", imagevars)
+  out.vars <- c(out.posndatevars, idcolumns, imagevars)
+  
+  #Re-order rows and response columns
+  longi.prime.dat <- longi.prime.dat[order(longi.prime.dat[cartId], longi.prime.dat$Days), ]
+  longi.prime.dat <- longi.prime.dat[out.vars]
+  return(longi.prime.dat)
 }
 
 #Function to add design factors for blocked, split plot design
@@ -638,21 +637,25 @@ predict.ncsSpline <- function(object, x, correctBoundaries = FALSE,
 }
 
 #Function to fit a spline using smooth.spline
-"fitSpline" <- function(data, response, x, df=NULL, correctBoundaries = FALSE, 
-                        deriv=NULL, suffices.deriv=NULL, RGR=NULL, 
+"fitSpline" <- function(data, response, x, df=NULL, smoothing.scale = "identity", 
+                        correctBoundaries = FALSE, 
+                        deriv=NULL, suffices.deriv=NULL, RGR=NULL, AGR = NULL, 
                         na.x.action="exclude", na.y.action = "exclude", ...)
 { 
   #check input arguments
   impArgs <- match.call()
   if ("na.rm"%in% names(impArgs))
     stop("na.rm has been deprecated; use na.x.action and na.y.action")
+  smscales <- c("identity", "logarithmic")
+  smscale <- smscales[check.arg.values(smoothing.scale, options=smscales)]
+  
   na.x <- na.y <- c("exclude", "omit", "fail")
   na.y <- c(na.y, "allx", "trimx", "ltrimx", "utrimx")
   na.act.x <- na.x[check.arg.values(na.x.action, options=na.x)]
   na.act.y <- na.y[check.arg.values(na.y.action, options=na.y)]  
   
   if (correctBoundaries & !is.null(deriv))
-    stop("Unable to estimate derivates when correctBoundaries = TRUE")
+    stop("Unable to estimate derivatives when correctBoundaries = TRUE")
   
   if (!is.null(deriv) & !is.null(suffices.deriv))
     if (length(deriv) != length(suffices.deriv))
@@ -666,6 +669,10 @@ predict.ncsSpline <- function(object, x, correctBoundaries = FALSE,
   }
   
   tmp <- data
+  #Transform data, if required
+  if (smscale == "logarithmic")
+    tmp[[response]] <- log(tmp[[response]])
+
   #Convert any infinite values to missing
   if (any(is.infinite(tmp[[response]])))
   {
@@ -786,36 +793,53 @@ predict.ncsSpline <- function(object, x, correctBoundaries = FALSE,
     if (is.null(fit))
       fit <- predict.ncsSpline(fit.spline, x = x.pred, 
                                correctBoundaries = fitcorrectBoundaries)
-    names(fit) <- c(x, paste(response,"smooth",sep="."))
+    rsmooth <- paste(response,"smooth",sep=".")
+    names(fit) <- c(x, rsmooth)
+    #backtransform if transformed
+    if (smscale == "logarithmic")
+      fit[[rsmooth]] <- exp(fit[[rsmooth]])
+    
     #get derivatives if required
     if (!correctBoundaries & !is.null(deriv))
     {
       for (d in deriv)
       {
         if (is.null(suffices.deriv))
-          fit[[paste(response,".smooth.dv",d,sep="")]] <- predict(fit.spline, x = x.pred, 
-                                                                  deriv=d)$y
+          rsmooth.dv <- paste(response,".smooth.dv",d,sep="")
         else
         { 
           k <- match(d, deriv)
-          fit[[paste(response,"smooth", 
-                     suffices.deriv[k], sep=".")]] <- predict(fit.spline, x = x.pred, 
-                                                              deriv=d)$y
+          rsmooth.dv <- paste(response,"smooth", suffices.deriv[k], sep=".")
         }
-        #Add RGR if required
-        if (!is.null(RGR))
+        fit[[rsmooth.dv]] <- predict(fit.spline$uncorrected.fit, x = x.pred, deriv=d)$y
+      }
+      #Add RGR if required
+      if (!is.null(RGR) && smscale == "identity")
+      { 
+        if (is.null(suffices.deriv))
+          rsmooth.dv <- paste(response,".smooth.dv",1,sep="")
+        else
         { 
-          rsmooth <- paste(response,"smooth",sep=".")
-          if (is.null(suffices.deriv))
-            fit[[paste(rsmooth,RGR,sep=".")]] <- fit[[paste(rsmooth,".dv",d,
-                                                            sep="")]]/fit[[rsmooth]]
-          else
-          { 
-            k <- match(1, deriv)
-            fit[[paste(rsmooth,RGR,sep=".")]] <- fit[[paste(rsmooth, suffices.deriv[k], 
-                                                            sep=".")]]/fit[[rsmooth]]
-          }
+          k <- match(1, deriv)
+          rsmooth.dv <- paste(response,"smooth", suffices.deriv[k], sep=".")
         }
+        if (!(rsmooth.dv %in% names(fit)))
+          stop("First derivative not available to calculate RGR")
+        fit[[paste(rsmooth,RGR,sep=".")]] <- fit[[rsmooth.dv]]/fit[[rsmooth]]
+      }
+      #Add AGR if required
+      if (!is.null(AGR) && smscale == "logarithmic")
+      { 
+        if (is.null(suffices.deriv))
+          rsmooth.dv <- paste(response,".smooth.dv",1,sep="")
+        else
+        { 
+          k <- match(1, deriv)
+          rsmooth.dv <- paste(response,"smooth", suffices.deriv[k], sep=".")
+        }
+        if (!(rsmooth.dv %in% names(fit)))
+          stop("First derivative not available to calculate AGR")
+        fit[[paste(rsmooth,AGR,sep=".")]] <- fit[[rsmooth.dv]]*fit[[rsmooth]]
       }
     }
     fit <- as.data.frame(fit)
@@ -833,21 +857,25 @@ predict.ncsSpline <- function(object, x, correctBoundaries = FALSE,
 #Fit splines to smooth the longitudinal trends in the primary responses
 #Specify responses to be smoothed and then loop over them
 "splitSplines" <- function(data, response, x, INDICES, df = NULL, 
+                           smoothing.scale = "identity", 
                            correctBoundaries = FALSE, 
-                           deriv = NULL, suffices.deriv=NULL, RGR=NULL, sep=".", 
+                           deriv = NULL, suffices.deriv=NULL, RGR=NULL, AGR = NULL, sep=".", 
                            na.x.action="exclude", na.y.action = "exclude", ...)
 { 
   impArgs <- match.call()
   if ("na.rm"%in% names(impArgs))
     stop("na.rm has been deprecated; use na.x.action and na.y.action")
-  
+  smscales <- c("identity", "logarithmic")
+  smscale <- smscales[check.arg.values(smoothing.scale, options=smscales)]
+
   #Split data frame by each combination of the INDICES factors
   old.names <- names(data)
   tmp <- split(data, as.list(data[INDICES]), sep=sep)
   #Fit splines for each combination of the INDICES factors
   tmp <- lapply(tmp, fitSpline, response=response, x = x, df=df, 
+                smoothing.scale = smscale, 
                 correctBoundaries = correctBoundaries, 
-                deriv=deriv, suffices.deriv=suffices.deriv,  RGR=RGR, 
+                deriv=deriv, suffices.deriv=suffices.deriv,  RGR=RGR, AGR=AGR, 
                 na.x.action=na.x.action, na.y.action=na.y.action, ...)
   tmp <- do.call(rbind, tmp)
   ncols <- ncol(tmp)
@@ -1287,7 +1315,7 @@ plotDeviations <- function(dat, x, obs, smoothed, devnplots = "none", x.title = 
 "probeDF" <- function(data, response = "Area", xname="xDays", 
                       individuals="Snapshot.ID.Tag", 
                       na.x.action="exclude", na.y.action = "exclude", 
-                      df, correctBoundaries = FALSE, 
+                      df, smoothing.scale = "identity", correctBoundaries = FALSE, 
                       get.rates = TRUE, rates.method="differences", 
                       times.factor = "Days", x = NULL, x.title = NULL, 
                       facet.x = "Treatment.1", facet.y = "Smarthouse", 
@@ -1355,7 +1383,8 @@ plotDeviations <- function(dat, x, obs, smoothed, devnplots = "none", x.title = 
     if (opt == "differences")
     { 
       tmp <- splitSplines(tmp, response, x=xname, INDICES = individuals, 
-                          df = degfree, correctBoundaries = correctBoundaries, 
+                          df = degfree, smoothing.scale = smoothing.scale, 
+                          correctBoundaries = correctBoundaries, 
                           na.x.action = na.x.action, na.y.action = na.y.action)
       if (get.rates)
       { 
@@ -1372,11 +1401,13 @@ plotDeviations <- function(dat, x, obs, smoothed, devnplots = "none", x.title = 
                               paste(response.smooth, c("AGR","RGR"), sep="."))
         tmp <- splitSplines(tmp, response, x=xname, INDICES = individuals, deriv=1, 
                             suffices.deriv="AGR", RGR="RGR", df = degfree, 
+                            smoothing.scale = smoothing.scale, 
                             na.x.action = na.x.action, na.y.action = na.y.action)
       }
       else
         tmp <- splitSplines(tmp, response, x=xname, INDICES = individuals, 
-                            df = degfree, correctBoundaries = correctBoundaries, 
+                            df = degfree, smoothing.scale = smoothing.scale, 
+                            correctBoundaries = correctBoundaries, 
                             na.x.action = na.x.action, na.y.action = na.y.action)
     }
     responses.df <- paste(responses.smooth, as.character(degfree), sep=".")
