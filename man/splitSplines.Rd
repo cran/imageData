@@ -83,7 +83,7 @@ splitSplines(data, response, x, INDICES, df = NULL, smoothing.scale = "identity"
             values are \code{fail}, \code{exclude} or \code{omit}. 
             For \code{exclude} and \code{omit}, predictions and derivatives 
             will only be obtained for nonmissing values of \code{x}. 
-            The difference between these two codes is that the returned 
+            The difference between these two codes is that for \code{exclude} the returned 
             \code{data.frame} will have as many rows as \code{data}, the 
             missing values have been incorporated. }
  \item{na.y.action}{A \code{\link{character}} string that specifies the action to 
@@ -96,7 +96,7 @@ splitSplines(data, response, x, INDICES, df = NULL, smoothing.scale = "identity"
             and derivatives will be obtained only for nonmissing values of 
             \code{x} that do not have missing \code{y} values. Again, the 
             difference between these two is that, only for \code{exclude} 
-            will the missing values will be incorporated into the 
+            will the missing values be incorporated into the 
             returned \code{data.frame}. For \code{allx}, predictions and 
             derivatives will be obtained for all nonmissing \code{x}. 
             For \code{trimx}, they will be obtained for all nonmissing 

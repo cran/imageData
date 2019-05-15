@@ -1,3 +1,12 @@
+.onAttach <- function(...)
+{ 
+  
+  if (!interactive() || sample.int(5, 1) == 1) 
+    return()
+  tips <- c("imageData has been superceded by growthPheno.")
+  packageStartupMessage(paste(strwrap(tips), collapse = "\n"))
+}
+
 "check.arg.values" <- function(arg.val, options)
   #Function to check that arg.val is one of the allowed values
   #and to return the position of the argument in the set of values
@@ -10,7 +19,7 @@
   {
     warning(paste("Only one value allowed for argument where", 
                   paste(arg.val, collapse = ","), "have been supplied", 
-            sep = " "))
+                  sep = " "))
     kopt <- kopt[1]
   }
   return(kopt)

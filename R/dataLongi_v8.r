@@ -1319,7 +1319,8 @@ plotDeviations <- function(dat, x, obs, smoothed, devnplots = "none", x.title = 
                       get.rates = TRUE, rates.method="differences", 
                       times.factor = "Days", x = NULL, x.title = NULL, 
                       facet.x = "Treatment.1", facet.y = "Smarthouse", 
-                      labeller = NULL, 
+                      labeller = NULL, colour = "black", colour.column=NULL, 
+                      colour.values=NULL, alpha = 0.1, 
                       which.traits = c("response", "AGR", "RGR"), 
                       which.plots = "smoothedonly",
                       deviations.boxplots = "none", 
@@ -1423,6 +1424,8 @@ plotDeviations <- function(dat, x, obs, smoothed, devnplots = "none", x.title = 
     { 
       pltu <- longiPlot(data = tmp, x=x, response = response, individuals = individuals, 
                         facet.x=facet.x, facet.y=facet.y, labeller = labeller, 
+                        colour = colour, colour.column = colour.column, 
+                        colour.values = colour.values, alpha = alpha, 
                         title="Unsmoothed response", x.title = x.title, y.title = response, 
                         printPlot=FALSE, ...)
       if (!is.null(ggplotFuncs))
@@ -1437,6 +1440,8 @@ plotDeviations <- function(dat, x, obs, smoothed, devnplots = "none", x.title = 
         r <- paste(response.smooth, degfree, sep=".")
         plt <- longiPlot(data = tmp, x=x, response = r, individuals = individuals, 
                          facet.x=facet.x, facet.y=facet.y, labeller = labeller, 
+                         colour = colour, colour.column = colour.column, 
+                         colour.values = colour.values, alpha = alpha, 
                          title="Smoothed response", x.title = x.title, y.title = r, 
                          printPlot=FALSE, ...)
         if (!is.null(ggplotFuncs))
@@ -1457,6 +1462,8 @@ plotDeviations <- function(dat, x, obs, smoothed, devnplots = "none", x.title = 
             r <- paste(response.smooth, degfree, sep=".")
             plt <- longiPlot(data = tmp, x=x, response = r, individuals = individuals, 
                              facet.x=facet.x, facet.y=facet.y, labeller = labeller, 
+                             colour = colour, colour.column = colour.column, 
+                             colour.values = colour.values, alpha = alpha, 
                              title="Smoothed response", x.title = x.title, y.title = r, 
                              printPlot=FALSE, ...)
             if (!is.null(ggplotFuncs))
@@ -1479,6 +1486,8 @@ plotDeviations <- function(dat, x, obs, smoothed, devnplots = "none", x.title = 
         pltu <- longiPlot(data = tmp, x=x, response = paste(response,"AGR",sep="."), 
                           individuals = individuals, 
                           facet.x=facet.x, facet.y=facet.y, labeller = labeller, 
+                          colour = colour, colour.column = colour.column, 
+                          colour.values = colour.values, alpha = alpha, 
                           title="Unsmoothed AGR by difference", 
                           x.title = x.title, y.title = paste(response,"AGR",sep="."), 
                           printPlot=FALSE, ...)
@@ -1494,6 +1503,8 @@ plotDeviations <- function(dat, x, obs, smoothed, devnplots = "none", x.title = 
           r <- paste(response.smooth, "AGR", degfree, sep=".")
           plt <- longiPlot(data = tmp, x=x, response = r, individuals = individuals, 
                            facet.x=facet.x, facet.y=facet.y, labeller = labeller, 
+                           colour = colour, colour.column = colour.column, 
+                           colour.values = colour.values, alpha = alpha, 
                            title="Smoothed AGR", x.title = x.title, y.title = r, 
                            printPlot=FALSE, ...)
           if (!is.null(ggplotFuncs))
@@ -1514,6 +1525,8 @@ plotDeviations <- function(dat, x, obs, smoothed, devnplots = "none", x.title = 
             r <- paste(response.smooth, "AGR", degfree, sep=".")
             plt <- longiPlot(data = tmp, x=x, response = r, individuals = individuals, 
                              facet.x=facet.x, facet.y=facet.y, labeller = labeller, 
+                             colour = colour, colour.column = colour.column, 
+                             colour.values = colour.values, alpha = alpha, 
                              title=paste("Smoothed AGR by ", opt, sep=""), 
                              x.title = x.title, y.title = r, printPlot=FALSE, ...)
             if (!is.null(ggplotFuncs))
@@ -1536,6 +1549,8 @@ plotDeviations <- function(dat, x, obs, smoothed, devnplots = "none", x.title = 
         pltu <- longiPlot(data = tmp, x=x, response = paste(response,"RGR",sep="."), 
                           individuals = individuals, 
                           facet.x=facet.x, facet.y=facet.y, labeller = labeller, 
+                          colour = colour, colour.column = colour.column, 
+                          colour.values = colour.values, alpha = alpha, 
                           title="Unsmoothed RGR by difference", 
                           x.title = x.title, y.title = paste(response,"RGR",sep="."), 
                           printPlot=FALSE, ...)
@@ -1551,6 +1566,8 @@ plotDeviations <- function(dat, x, obs, smoothed, devnplots = "none", x.title = 
           r <- paste(response.smooth, "RGR", degfree, sep=".")
           plt <- longiPlot(data = tmp, x=x, response = r, individuals = individuals, 
                            facet.x=facet.x, facet.y=facet.y, labeller = labeller, 
+                           colour = colour, colour.column = colour.column, 
+                           colour.values = colour.values, alpha = alpha, 
                            title="Smoothed RGR", x.title = x.title, y.title = r, 
                            printPlot=FALSE, ...)
           if (!is.null(ggplotFuncs))
@@ -1571,6 +1588,8 @@ plotDeviations <- function(dat, x, obs, smoothed, devnplots = "none", x.title = 
             r <- paste(response.smooth, "RGR", degfree, sep=".")
             plt <- longiPlot(data = tmp, x=x, response = r, individuals = individuals, 
                              facet.x=facet.x, facet.y=facet.y, labeller = labeller, 
+                             colour = colour, colour.column = colour.column, 
+                             colour.values = colour.values, alpha = alpha, 
                              title=paste("Smoothed RGR by ", opt, sep=""), 
                              x.title = x.title, y.title = r, printPlot=FALSE, ...)
             if (!is.null(ggplotFuncs))

@@ -1,5 +1,35 @@
 \name{news}
 \title{News for Package imageData}
+\section{imageData Version 0.1-59 (2019-05-15)}{
+  \itemize{
+    \item{Final update for imageData, which is no longer maintained as it has been replaced by phenoGrowth. A tip stating this will periodically appear on loading the library.}
+}}
+\section{imageData Version 0.1-56 (2019-04-03)}{
+  \itemize{
+    \item{Update the Author field of the DESCRIPTION to include an ORCID.}
+}}
+\section{imageData Version 0.1-55 (2019-02-21)}{
+  \itemize{
+    \item{Use R.rsp to install vignettes so that hyperlinks are active.}
+}}
+\section{imageData Version 0.1-54 (2019-02-07)}{
+  \itemize{
+    \item{Make the manual a vignette.}
+}}
+\section{imageData Version 0.1-53 (2018-07-15)}{
+  \itemize{
+    \item{Add arguments \code{colour}, \code{colour.column}, \code{colour.values} and \code{alpha} to probeDF.}
+    \item{Minor corrections to manual.}
+    \item{Recompile to reinstate new versions of all functions.}
+}}
+\section{imageData Version 0.1-52 (2018-07-13)}{
+  \itemize{
+    \item{Minor corrections to manual.}
+}}
+\section{imageData Version 0.1-51 (2018-06-12)}{
+  \itemize{
+    \item{Rebuild under latest version of R 3.5.0 with requirement for R >= 3.1.0.}
+}}
 \section{imageData Version 0.1-50 (2018-06-11)}{
   \itemize{
     \item{Test build under 3.6.0 with new version of ggplot2.}

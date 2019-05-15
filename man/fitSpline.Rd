@@ -92,7 +92,7 @@ fitSpline(data, response, x, df=NULL, smoothing.scale = "identity",
             and derivatives will be obtained only for nonmissing values of 
             \code{x} that do not have missing \code{y} values. Again, the 
             difference between these two is that, only for \code{exclude} 
-            will the missing values will be incorporated into the 
+            will the missing values be incorporated into the 
             returned \code{data.frame}. For \code{allx}, predictions and 
             derivatives will be obtained for all nonmissing \code{x}. 
             For \code{trimx}, they will be obtained for all nonmissing 

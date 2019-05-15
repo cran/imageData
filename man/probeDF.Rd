@@ -19,6 +19,7 @@ probeDF(data, response = "Area", xname="xDays", individuals="Snapshot.ID.Tag",
         get.rates = TRUE, rates.method="differences", 
         times.factor = "Days", x = NULL, x.title = NULL, 
         facet.x = "Treatment.1", facet.y =   "Smarthouse", labeller = NULL, 
+        colour = "black", colour.column=NULL, colour.values=NULL, alpha = 0.1, 
         which.traits = c("response", "AGR", "RGR"),
         which.plots = "smoothedonly", 
         deviations.boxplots = "none", 
@@ -41,7 +42,7 @@ probeDF(data, response = "Area", xname="xDays", individuals="Snapshot.ID.Tag",
             values are \code{fail}, \code{exclude} or \code{omit}. 
             For \code{exclude} and \code{omit}, predictions and derivatives 
             will only be obtained for nonmissing values of \code{x}. 
-            The difference between these two codes is that the returned 
+            The difference between these two codes is that for \code{exclude} the returned 
             \code{data.frame} will have as many rows as \code{data}, the 
             missing values have been incorporated. }
  \item{na.y.action}{A \code{character} string that specifies the action to 
@@ -54,7 +55,7 @@ probeDF(data, response = "Area", xname="xDays", individuals="Snapshot.ID.Tag",
             and derivatives will be obtained only for nonmissing values of 
             \code{x} that do not have missing \code{y} values. Again, the 
             difference between these two is that, only for \code{exclude} 
-            will the missing values will be incorporated into the 
+            will the missing values be incorporated into the 
             returned \code{data.frame}. For \code{allx}, predictions and 
             derivatives will be obtained for all nonmissing \code{x}. 
             For \code{trimx}, they will be obtained for all nonmissing 
@@ -66,7 +67,7 @@ probeDF(data, response = "Area", xname="xDays", individuals="Snapshot.ID.Tag",
               be probed.}
  \item{smoothing.scale}{A \code{\link{character}} giving the scale on which smoothing 
       is to be performed. The two possibilites are \code{"identity"}, for directly 
-      smoothing the observed \code{response}, and \code{"logarithmic"}, for scaling the 
+      smoothing the observed \code{response}, and \code{"logarithmic"}, for smoothing the 
       \code{log}-transformed \code{response}.}
  \item{correctBoundaries}{A \code{\link{logical}} indicating whether the fitted 
             spline values are to have the method of Huang (2001) applied 
@@ -94,6 +95,21 @@ probeDF(data, response = "Area", xname="xDays", individuals="Snapshot.ID.Tag",
  \item{labeller}{A \code{\link{ggplot}} \code{\link{function}} for labelling the 
                  facets of a plot produced using the \code{\link{ggplot}} function. 
                  For more information see \code{\link{ggplot}}.}
+ \item{colour}{A \code{\link{character}} specifying a single colour to use in 
+               drawing the lines for the profiles. If colouring according to the 
+               values of a variable is required then use \code{colour.column}.}
+ \item{colour.column}{A \code{\link{character}} giving the name of a column 
+             in \code{data} over whose values the colours of the lines are to be 
+             varied. The colours can be specified using \code{colour.values} .}
+ \item{colour.values}{A \code{\link{character}} vector specifying the values of 
+               the colours to use in drawing the lines for the profiles.  
+               If this is a named vector, then the values will be matched based 
+               on the names. If unnamed, values will be matched in order 
+               (usually alphabetical) with the limits of the scale.}
+ \item{alpha}{A \code{\link{numeric}} specifying the degrees of transparency to 
+              be used in plotting. It is a ratio in which the denominator 
+              specifies the number of points (or line) that must be overplotted 
+              to give a solid cover.}
  \item{which.traits}{A \code{\link{character}} giving the traits that are to be 
              produced. One of more of \code{response}, \code{AGR} and \code{RGR}. 
              If \code{all}, all three traits are produced. The unsmoothed growth 
@@ -107,7 +123,7 @@ probeDF(data, response = "Area", xname="xDays", individuals="Snapshot.ID.Tag",
              of \code{df}.}
  \item{deviations.boxplots}{A \code{\link{character}} specifying whether boxplots of 
              the \code{absolute} and/or \code{relative} deviations of the values of a 
-             trait from  their smoothed values are to be produced. If \code{none}, 
+             trait from  their smoothed values are to be produced (observed - smoothed). If \code{none}, 
              no plots are produced. The argument \code{which.traits} controls 
              the traits for which boxplots are produced.}
  \item{ggplotFuncs}{A \code{\link{list}}, each element of which contains the 
