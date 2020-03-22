@@ -1,5 +1,10 @@
 \name{news}
 \title{News for Package imageData}
+\section{imageData Version 0.1-60 (2020-03-22)}{
+  \itemize{
+    \item{Replace XLConnect for reading excel files with readxl.}
+    \item{Change the Maintainer email address}
+}}
 \section{imageData Version 0.1-59 (2019-05-15)}{
   \itemize{
     \item{Final update for imageData, which is no longer maintained as it has been replaced by phenoGrowth. A tip stating this will periodically appear on loading the library.}

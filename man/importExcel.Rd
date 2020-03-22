@@ -1,7 +1,7 @@
 \name{importExcel}
 \alias{importExcel}
 \title{Imports an Excel imaging file and allows some renaming of variables}
-\description{Uses \code{XLConnect} to import a sheet of imaging data produced by the 
+\description{Uses \code{readxl} to import a sheet of imaging data produced by the 
   Lemna Tec Scanalyzer. Basically, the data consists of imaging data obtained from a 
   set of pots or carts over time. There should be a column, which by default is called 
   \code{Snapshot.ID.Tag}, containing a unique identifier for each cart and a column, 
@@ -87,15 +87,6 @@ importExcel(file, sheet="raw data", sep = ",",
              \code{intervals} is passed an error will occur; use timeAfterStart instead.}
 }
 \value{A \code{\link{data.frame}} containing the data.}
-\note{\code{XLConnect} uses Java and can take a lot of memory. You may have to increase 
-      the amount of RAM allocated to the Java heap. For example, 
-      \code{options(java.parameters = "-Xmx10g")} allocates 10 gigabytes of RAM, which 
-      has been needed on occasion to read Excel imaging files. Java itself must also be 
-      configured to allocate at least this amount of memory.
-      
-      Also, note that XLConnect cannot import cells with some Excel functions. For example,
-      it cannot import cells that use {ROUNDOWN} in a formula. The problem can be avoided by 
-      converting the formulae into values.}
 \author{Chris Brien}
 \seealso{\code{\link{as.POSIXct}}, \code{\link{calcTimes}}, \code{\link{imagetimesPlot}}}
 \examples{\dontrun{

@@ -60,7 +60,11 @@ globalVariables(c("Snapshot.ID.Tag", "Snapshot.Time.Stamp", "Time.after.Planting
     raw.dat[imageTimes] <- as.POSIXct(raw.dat[[imageTimes]], format = timeFormat)
   }
   else if(grepl("xlsx", file))
-    raw.dat <- readWorksheetFromFile(file, sheet=sheet)
+  {
+    raw.dat <- as.data.frame(read_excel(file, sheet=sheet))
+    colnames(raw.dat) <- make.names(colnames(raw.dat))
+    #raw.dat <- readWorksheetFromFile(file, sheet=sheet)
+  }
   else
     stop("File name does not include csv or xlsx")
   ncinput <- ncol(raw.dat)
