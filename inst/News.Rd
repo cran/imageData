@@ -1,5 +1,9 @@
 \name{news}
 \title{News for Package imageData}
+\section{imageData Version 0.1-61 (2020-12-28)}{
+  \itemize{
+   \item{Fix a bug for R 4.1.0 in longitudinalPrime and importExcel arising from the use of the order function.}
+}}
 \section{imageData Version 0.1-60 (2020-03-22)}{
   \itemize{
     \item{Replace XLConnect for reading excel files with readxl.}

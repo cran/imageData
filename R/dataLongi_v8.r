@@ -131,7 +131,7 @@ globalVariables(c("Snapshot.ID.Tag", "Snapshot.Time.Stamp", "Time.after.Planting
   
   #Sort data into cartId, Time.after.Planting..d. order and store
   # - may need to be reordered for analysis purposes
-  raw.dat <- raw.dat[order(raw.dat[cartId], raw.dat[timeAfterStart]), ]
+  raw.dat <- raw.dat[order(raw.dat[[cartId]], raw.dat[[timeAfterStart]]), ]
   return(raw.dat)
 }
 
@@ -266,7 +266,7 @@ if (all(idcolumns %in% vars))
   out.vars <- c(out.posndatevars, idcolumns, imagevars)
   
   #Re-order rows and response columns
-  longi.prime.dat <- longi.prime.dat[order(longi.prime.dat[cartId], longi.prime.dat$Days), ]
+  longi.prime.dat <- longi.prime.dat[order(longi.prime.dat[[cartId]], longi.prime.dat$Days), ]
   longi.prime.dat <- longi.prime.dat[out.vars]
   return(longi.prime.dat)
 }
