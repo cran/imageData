@@ -3,7 +3,7 @@
 \alias{RiceRaw.dat}
 \title{Data for an experiment to investigate a rice germplasm panel}
 \description{
-The data is from an experiment in a Smarthouse in the Plant Accelerator. It is described in Al-Tamimi et al. (2016). It is used in \code{\link{imageData-pkg}} as an executable example to illustrate the use of \code{imageData}.
+The data is from an experiment in a Smarthouse in the Plant Accelerator. It is described in Al-Tamimi et al. (2016). It is used in \code{\link{imageData-package}} as an executable example to illustrate the use of \code{imageData}.
 
 }
 \usage{data(RiceRaw.dat)}

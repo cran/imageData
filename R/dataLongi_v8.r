@@ -593,7 +593,7 @@ ncsSpline <- function(vars, correctBoundaries = FALSE,
 predict.ncsSpline <- function(object, x, correctBoundaries = FALSE, 
                              df = NULL, cv = FALSE,  ...)
 {
-  if (class(object) != "ncsSpline")
+  if (!inherits(object, "ncsSpline"))
     stop("Must supply a an object of class ncsSpline")
   fit <- predict(object$uncorrected.fit, x = x)
   

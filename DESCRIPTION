@@ -1,6 +1,6 @@
 Package: imageData
-Version: 0.1-61
-Date: 2020-12-28
+Version: 0.1-62
+Date: 2023-08-21
 Title: Aids in Processing and Plotting Data from a Lemna-Tec
         Scananalyzer
 Authors@R: person("Chris","Brien", role = c("aut","cre"),
@@ -21,8 +21,8 @@ License: GPL (>= 2)
 URL: http://chris.brien.name
 RoxygenNote: 5.0.1
 NeedsCompilation: no
-Packaged: 2020-12-28 11:57:28 UTC; briencj
+Packaged: 2023-08-20 16:53:33 UTC; briencj
 Author: Chris Brien [aut, cre] (<https://orcid.org/0000-0003-0581-1817>)
 Maintainer: Chris Brien <chris.brien@adelaide.edu.au>
 Repository: CRAN
-Date/Publication: 2021-01-11 06:30:03 UTC
+Date/Publication: 2023-08-22 12:10:11 UTC

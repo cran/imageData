@@ -1,7 +1,7 @@
 \newcommand{\packageVer}{\Sexpr[results=rd,stage=build]{utils::packageDescription("#1", fields="Version")}}
 \newcommand{\packageDate}{\Sexpr[results=rd,stage=build]{utils::packageDescription("#1", fields="Date")}}
-\name{imageData-pkg}
-\alias{imageData-pkg}
+\name{imageData-package}
+\alias{imageData-package}
 \alias{imageData}
 \docType{package}
 \title{

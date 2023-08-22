@@ -1,5 +1,9 @@
 \name{news}
 \title{News for Package imageData}
+\section{imageData Version 0.1-62 (2023-08-21)}{
+  \itemize{
+  \item{Correct package overview help file.}
+  }}
 \section{imageData Version 0.1-61 (2020-12-28)}{
   \itemize{
    \item{Fix a bug for R 4.1.0 in longitudinalPrime and importExcel arising from the use of the order function.}
@@ -166,7 +170,7 @@
 \section{imageData Version 0.1-21 (2016-05-16)}{
   \itemize{
     \item{Further revised package documentation.}
-    \item{Included RiceRaw.dat, a data set from the Plant Accelerator, and revised the example in imageData-pkg to be based on it.}
+    \item{Included RiceRaw.dat, a data set from the Plant Accelerator, and revised the example in imageData-package to be based on it.}
     \item{Included a small data set and modified examples to use it so that most examples in the manual can be run.}
     \item{Fixed bugs in PVA, intervalPVA, rcontrib and corrPlot.}
   }}
